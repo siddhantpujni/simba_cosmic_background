@@ -157,17 +157,33 @@ scripts/
     └── high_resolution.yaml
 ```
 
-Load with:
+Load with a helper function:
 ```python
 import yaml
 from pathlib import Path
 
-config_path = Path('configs/default.yaml')
-if config_path.exists():
+def load_config(config_path):
+    """Load YAML configuration file.
+    
+    Parameters
+    ----------
+    config_path : str or Path
+        Path to configuration file
+        
+    Returns
+    -------
+    dict
+        Configuration dictionary
+    """
+    config_path = Path(config_path)
+    if not config_path.exists():
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+    
     with open(config_path) as f:
-        config = yaml.safe_load(f)
-else:
-    raise FileNotFoundError(f"Config file not found: {config_path}")
+        return yaml.safe_load(f)
+
+# Usage in script
+config = load_config('configs/default.yaml')
 ```
 
 ## Batch Processing

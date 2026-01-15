@@ -60,7 +60,27 @@ def sample_wavelengths():
 
 # Configure pytest marks
 def pytest_configure(config):
-    """Configure custom pytest markers."""
+    """Configure custom pytest markers.
+    
+    Markers:
+    --------
+    slow : Mark tests that take significant time to run (>1 second)
+        Usage: @pytest.mark.slow
+        Run all except slow tests: pytest -m "not slow"
+        Run only slow tests: pytest -m slow
+        
+    integration : Mark integration tests that test multiple components
+        Usage: @pytest.mark.integration
+        Run only unit tests: pytest -m "not integration"
+        Run only integration tests: pytest -m integration
+    
+    Examples:
+    ---------
+    >>> @pytest.mark.slow
+    >>> def test_large_simulation():
+    >>>     # Test that takes several seconds
+    >>>     pass
+    """
     config.addinivalue_line(
         "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"
     )

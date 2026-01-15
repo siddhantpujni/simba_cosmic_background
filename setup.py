@@ -1,4 +1,7 @@
-"""Setup script for simba_cosmic_background package."""
+"""Setup script for simba_cosmic_background package.
+
+Note: Update author information in lines 11-12 before publishing to PyPI.
+"""
 
 from setuptools import setup, find_packages
 

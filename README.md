@@ -55,13 +55,20 @@ cd simba_cosmic_background
 conda env create -f environment.yml
 conda activate simba_cosmic_background
 
-# Or using pip
+# Or using pip (core dependencies only)
 pip install -r requirements.txt
 ```
 
 3. Install the package in development mode:
 ```bash
+# Core package only
 pip install -e .
+
+# With development tools (testing, jupyter, code quality)
+pip install -e .[dev]
+
+# With all optional dependencies
+pip install -e .[dev,docs,analysis]
 ```
 
 ### Data Setup

@@ -160,8 +160,14 @@ scripts/
 Load with:
 ```python
 import yaml
-with open('configs/default.yaml') as f:
-    config = yaml.safe_load(f)
+from pathlib import Path
+
+config_path = Path('configs/default.yaml')
+if config_path.exists():
+    with open(config_path) as f:
+        config = yaml.safe_load(f)
+else:
+    raise FileNotFoundError(f"Config file not found: {config_path}")
 ```
 
 ## Batch Processing

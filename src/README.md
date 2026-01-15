@@ -114,7 +114,7 @@ from src.data import load_simba_catalog
 
 ## Setup Configuration
 
-Create a `setup.py` or `pyproject.toml` in the repository root to make this an installable package.
+The repository includes a `setup.py` file in the root directory that makes this an installable package.
 
 ## Dependencies
 

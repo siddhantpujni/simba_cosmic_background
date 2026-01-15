@@ -52,5 +52,10 @@ setup(
             "sphinx>=4.0.0",
             "sphinx-rtd-theme>=0.5.0",
         ],
+        "analysis": [
+            "scikit-learn>=0.24.0",
+            "corner>=2.2.0",
+            "emcee>=3.0.0",
+        ],
     },
 )

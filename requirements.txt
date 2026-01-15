@@ -33,8 +33,3 @@ mypy>=0.900
 # Documentation
 sphinx>=4.0.0
 sphinx-rtd-theme>=0.5.0
-
-# Optional: for specific analyses
-# scikit-learn>=0.24.0  # Machine learning
-# corner>=2.2.0  # Corner plots for parameter spaces
-# emcee>=3.0.0  # MCMC sampling

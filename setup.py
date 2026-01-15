@@ -8,8 +8,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name="simba_cosmic_background",
     version="0.1.0",
-    author="Your Name",
-    author_email="your.email@institution.edu",
+    author="Your Name",  # TODO: Update with actual author name
+    author_email="your.email@institution.edu",  # TODO: Update with actual email
     description="Analysis of cosmic background using Simba simulations and Powderday",
     long_description=long_description,
     long_description_content_type="text/markdown",

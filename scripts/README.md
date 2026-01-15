@@ -174,13 +174,23 @@ def load_config(config_path):
     -------
     dict
         Configuration dictionary
+        
+    Raises
+    ------
+    FileNotFoundError
+        If config file doesn't exist
+    yaml.YAMLError
+        If config file is invalid YAML
     """
     config_path = Path(config_path)
     if not config_path.exists():
         raise FileNotFoundError(f"Config file not found: {config_path}")
     
-    with open(config_path) as f:
-        return yaml.safe_load(f)
+    with open(config_path, encoding='utf-8') as f:
+        try:
+            return yaml.safe_load(f)
+        except yaml.YAMLError as e:
+            raise ValueError(f"Invalid YAML in {config_path}: {e}")
 
 # Usage in script
 config = load_config('configs/default.yaml')

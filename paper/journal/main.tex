@@ -71,6 +71,14 @@ Managed to get done the SED of the fluxes of all galaxies in all filters in the 
     \label{fig:sed_z0}
 \end{figure}
 
+\newday{2026-01-17} Worked on building the SED of all galaxies in all bands from the Caesar catalogue.
+
+ The catalogue was loaded via caesar.load, and a basic histogram of log10(total mass) by extracting each galaxy’s total mass (i.masses['total']) was used to visualise the overall galaxy population. Some time was spent to learn and familiarising with the overall file and data structure of the hdf5 files in general.
+ 
+Essentially constructed a catalogue-wide SED from stored apparent AB magnitudes with dust (galaxy_data/dicts/appmag.*): for each filter it converts magnitudes to flux density using the AB relation (F_\nu = 3631,\mathrm{Jy},10^{-m/2.5}), obtains an effective frequency (\nu) from the FSPS filter’s effective wavelength ((\nu=c/\lambda_\mathrm{eff})), sums flux over all galaxies to get a total per-filter (F_\nu), sorts by frequency, and plots (\nu F_\nu) versus (\nu) on log–log axes to show the overall SED shape of the sample across the available bands.
+
+\newday{2026-01-20} Setting up cuillin login and accessing simba data through it, needed to learn some linux commands to navigate through directories and files. Managed to access the simba data and set up a symlink in the home directory to access it for analysis. Goal for rest of the week is to make the same plot at different redshifts to look at how things are evolving with time. Also aiming to break up the SED into different components -- eg. star forming galaxies vs quenched galaxies, a range of stellar mass bins to gain a sense of what objects are dominating the overall cosmic light at given wavelengths and redshifts.
+
 \end{document}
 
 % \verb|\newday| is the main command provided by the \verb|researchjournal| class. It receives a single argument: a date in the \verb|yyyy-mm-dd| format. Issuing it will automatically generate the necessary chapter and sections for the year and month, respectively. This happens in addition to issuing a subsection for the specific day. The command creates the new chapter and section by comparing the date it received to the previous date issued by the user. It also checks for chronological order and for repeated days, but it can't do much about it. At most, you will get a class warning to let you know your entries are out of order. The chapter and section creation facilities do assume you are typing your entries in chronological order, so you might not get a new chapter if you type a previous year. % newday is the main command provided by the class. It inserts a daily entry and automatically checks whether it is necessary to create a new chapter (due to a new year) or a new section (due to a new month). Its sole argument is a date in the format yyyy-mm-dd. Issue the command, then write as you will in front of it.

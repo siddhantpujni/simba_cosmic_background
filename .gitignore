@@ -64,6 +64,7 @@ data/raw/*
 data/processed/*
 data/simba/*
 data/powderday/*
+data/caesar_catalogues/*
 
 # But keep README files in data directories
 !data/**/README.md

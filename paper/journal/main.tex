@@ -66,7 +66,7 @@ The catalogue was loaded via caesar.load, and a basic histogram of log10(total m
  
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/week 1/mass_diss.png}
+    \includegraphics[width=0.9\textwidth]{figures/week_1/mass_diss.png}
     \caption{Histogram of total galaxy mass from the SIMBA z=0 snapshot.}
     \label{fig:mass_diss}
 \end{figure}
@@ -75,7 +75,7 @@ Essentially constructed a catalogue-wide SED from stored apparent AB magnitudes 
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/week 1/galaxy_sed.png}
+    \includegraphics[width=0.9\textwidth]{figures/week_1/galaxy_sed.png}
     \caption{Spectral energy distribution from the SIMBA z=0 snapshot, plotted as $\nu F_{\nu}$ versus frequency $\nu$ (assuming AB magnitudes).}
     \label{fig:sed_z0}
 \end{figure}
@@ -83,7 +83,25 @@ Essentially constructed a catalogue-wide SED from stored apparent AB magnitudes 
 
 \newday{2026-01-20} Setting up Cuillin login and accessing Simba data through it, needed to learn some linux commands to navigate through directories and files. Managed to access the Simba data and set up a symlink in the home directory to access it for analysis. The goal for the rest of the week is to create the same plot at different redshifts to examine how things evolve over time. Also aiming to break up the SED into different components -- eg. star forming galaxies vs quenched galaxies, a range of stellar mass bins to gain a sense of what objects are dominating the overall cosmic light at given wavelengths and redshifts.
 
-Need to add more references and papers and stuff.
+Need to add more references and papers about what I'm using.
+
+\newday{2026-01-22} Working on looking at the time evolution of full galaxy SED across different redshifts. No galaxies have formed above a redshift of z=? (below file number 019) and its only halos so there is no SED to be made. Also will be ignore snap 151 from now on which is effectively z=0 because apparent = abs magnitude because its at 0 distance from us.
+
+Created a plot showing the SED at different redshifts from z~9 to z~0 for both apparent and absolute magnitudes just taking occasional redshift jumps. The overall trend is that the SED increases in intensity as time goes on (lower redshift), which is expected as more stars and galaxies form over time, contributing to the overall light. The peak of the SED also shifts slightly towards longer wavelengths (lower frequencies) at lower redshifts, which could be due to the increasing contribution of older, redder stellar populations and dust attenuation effects.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/week_2/time_evo_abs_mag_SED.png}
+    \caption{Time evolution of the spectral energy distribution of absolute magnitudes from the SIMBA snapshots, plotted as $\nu F_{\nu}$ versus wavelength $\lambda$ (assuming AB magnitudes).}
+    \label{fig:sed_z0}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/week_2/time_evo_app_mag_SED.png}
+    \caption{Time evolution of the spectral energy distribution of apparent magnitudes from the SIMBA snapshots, plotted as $\nu F_{\nu}$ versus wavelength $\lambda$ (assuming AB magnitudes).}
+    \label{fig:sed_z0}
+\end{figure}
 
 \end{document}
 

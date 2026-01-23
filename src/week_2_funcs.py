@@ -87,7 +87,7 @@ def compute_summed_sed_from_absmags(hdf5_path, mask=None):
     nuFnu = freqs[order] * fluxes[order]
     return lam_AA, nuFnu, labels[order]
 
-def classify_galaxies(hdf5_path, sfr_threshold, ssfr_threshold):
+def classify_galaxies(hdf5_path):
     """
     Classify galaxies as star-forming or quenched.
     
@@ -107,10 +107,8 @@ def classify_galaxies(hdf5_path, sfr_threshold, ssfr_threshold):
 
     ssfr = sfr / stellar_mass
 
-    print(ssfr)
-    
     # Quenched: low SFR_100 AND low sSFR
-    quenched = (sfr_100 < sfr_threshold) & (ssfr < ssfr_threshold)
+    quenched = ssfr < 10**(-11)  # sSFR threshold defined by paper 
     star_forming = ~quenched
     
     return {

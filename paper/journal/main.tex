@@ -8,6 +8,9 @@
 
 \documentclass[a4paper, 11pt, oneside]{researchjournal} % I wrote the design using a4paper, 11pt, oneside, but feel free to change
 
+\usepackage[margin=0.7in]{geometry}
+\usepackage{cleveref}
+
 %\logo{} can be used to add a small decoration to the top of the cover page. My original idea was to put an \insergraphics command in it and load, e.g., the university logo or something
 
 \author{Siddhant Pujni\\ % you can use double bars to add lines to the author decoration on the main page
@@ -30,11 +33,11 @@ Had the preliminary meeting with Romeel yesterday to get going on the project. H
 
 \vspace{0.5em}
 
-The paper discusses \daybib\cite{hillSpectrumUniverse2018}.
+The paper discusses \cite{hillSpectrumUniverse2018}.
 
 \vspace{0.5em}
 
-The article discusses \daybib\cite{bakerWhatColorUniverse2021}.
+The article discusses \cite{bakerWhatColorUniverse2021}.
 
 Need to do more reading regarding and learn about:
 \begin{itemize}
@@ -42,7 +45,7 @@ Need to do more reading regarding and learn about:
     \item CAESAR documentation (specifically Photometry section)
     \item FSPS
     \item H5py for file reading
-    \item also set up the GitHub
+    \item also set up the GitHub repo for organised work
 \end{itemize}
 
 Also assigned the first task, which is to replicate Figure 4 from \cite{hillSpectrumUniverse2018}, but just for one snapshot of the SIMBA simulation. The goal is to essentially look at all galaxies at some redshift and sum up their fluxes for each band, then plot them by extracting wavelength and magnitudes. Adding up all intensities for each filter and then plotting each filter at its respective frequency.
@@ -60,65 +63,61 @@ Using the CAESAR Catalogue with 25 Mpc/h volume and $2\times256^3$ particles, at
 
 Spent some time setting up the GitHub repo with working references from zotero and Overleaf linking for report writing and referencing. Everything now works as one big thing together.
 
-\newday{2026-01-17} Worked on building the SED of all galaxies in all bands from the Caesar catalogue.
-
-The catalogue was loaded via caesar.load, and a basic histogram of log10(total mass) by extracting each galaxy’s total mass (i.masses['total']) was used to visualise the overall galaxy population. Some time was spent to learn and familiarising with the overall file and data structure of the hdf5 files in general.
+\newday{2026-01-17} Worked on building the SED of all galaxies in all bands from the Caesar catalogue. The catalogue was loaded via caesar.load, and a basic histogram in \cref{fig:mass_diss} of log10(total mass) by extracting each galaxy’s total mass (i.masses['total']) was used to visualise the overall galaxy population. Some time was spent to learn and familiarising with the overall file and data structure of the hdf5 files in general.
  
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/week_1/mass_diss.png}
+    \includegraphics[width=0.7\textwidth]{figures/week_1/mass_diss.png}
     \caption{Histogram of total galaxy mass from the SIMBA z=0 snapshot.}
     \label{fig:mass_diss}
 \end{figure}
 
-Essentially constructed a catalogue-wide SED from stored apparent AB magnitudes with dust (galaxy\_data/dicts/appmag.*): for each filter it converts magnitudes to flux density using the AB relation $(F_\nu = 3631,\mathrm{Jy},10^{-m/2.5})$, obtains an effective frequency ($\nu$) from the FSPS filter’s effective wavelength ($(\nu=c/\lambda_\mathrm{eff})$), sums flux over all galaxies to get a total per-filter $(F_\nu)$, sorts by frequency, and plots $(\nu F_\nu)$ versus $(\nu)$ on log–log axes to show the overall SED shape of the sample across the available bands.
+\newpage 
+
+Essentially constructed a catalogue-wide SED from stored apparent magnitudes accounting for dust (galaxy\_data/dicts/appmag.*): for each filter it converts magnitudes to flux density using the AB relation $F_\nu = 3631,\mathrm{Jy},10^{-m/2.5}$, obtains an effective frequency ($\nu$) from the FSPS filter’s effective wavelength $(\nu=c/\lambda_\mathrm{eff})$, sums flux over all galaxies to get a total per-filter $F_\nu$, sorts by frequency, and plots $\nu F_\nu$ versus $\nu$ on log–log axes to show the overall SED shape of the sample across the available bands in \cref{fig:sed_z0}.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/week_1/galaxy_sed.png}
+    \includegraphics[width=0.7\textwidth]{figures/week_1/galaxy_sed.png}
     \caption{Spectral energy distribution from the SIMBA z=0 snapshot, plotted as $\nu F_{\nu}$ versus frequency $\nu$ (assuming AB magnitudes).}
     \label{fig:sed_z0}
 \end{figure}
 
+\newpage
 
-\newday{2026-01-20} Setting up Cuillin login and accessing Simba data through it, needed to learn some linux commands to navigate through directories and files. Managed to access the Simba data and set up a symlink in the home directory to access it for analysis. The goal for the rest of the week is to create the same plot at different redshifts to examine how things evolve over time. Also aiming to break up the SED into different components -- eg. star forming galaxies vs quenched galaxies, a range of stellar mass bins to gain a sense of what objects are dominating the overall cosmic light at given wavelengths and redshifts.
+\newday{2026-01-20} Setting up Cuillin login and accessing Simba data through it, needed to learn some linux commands to navigate through directories and files. Managed to access the Simba data and set up a symlink in the home directory to access it for analysis. The goal for the rest of the week is to create the same plot at different redshifts to examine how things evolve over time. Also aiming to break up the SED into different components -- e.g., star-forming galaxies vs quenched galaxies, a range of stellar mass bins to gain a sense of what objects are dominating the overall cosmic light at given wavelengths and redshifts. I need to add more references and papers about the tools that I'm using.
 
-Need to add more references and papers about what I'm using.
+\newday{2026-01-22} Working on looking at the time evolution of full galaxy SED across different redshifts. No galaxies have formed above a redshift of z=? (below file number 019) and its only halos so there is no SED to be made. Also will be ignoring snap 151 from now on which is effectively z=0 because apparent = abs magnitude because its at 0 distance from us.
 
-\newday{2026-01-22} Working on looking at the time evolution of full galaxy SED across different redshifts. No galaxies have formed above a redshift of z=? (below file number 019) and its only halos so there is no SED to be made. Also will be ignore snap 151 from now on which is effectively z=0 because apparent = abs magnitude because its at 0 distance from us.
-
-Created a plot showing the SED at different redshifts from z~9 to z~0 for both apparent and absolute magnitudes just taking occasional redshift jumps. The overall trend is that the SED increases in intensity as time goes on (lower redshift), which is expected as more stars and galaxies form over time, contributing to the overall light. The peak of the SED also shifts slightly towards longer wavelengths (lower frequencies) at lower redshifts, which could be due to the increasing contribution of older, redder stellar populations and dust attenuation effects.
+Created a plot in \cref{fig:time_evo_abs_mag_sed} and \cref{fig:time_evo_app_mag_sed} showing the SED at different redshifts from z~9 to z~0 for both apparent and absolute magnitudes just taking occasional redshift jumps. my general understanding for the absolute magnitude SEDs was that as time goes on (lower redshifts) it increases in intensity because more stars and galaxies form over time contributing to overall light. for the apparent magnitude it was more so that we're observing a lot more flux from closer galaxies so higher intensity and is mainly showcasing the distance effects. As for the overall shape my understanding was its determined by hotter bluer stars which contributes to fluxes at shorter wavelengths and the longer redder wavelengths are dominated by older cooler stars the combination of which will make up the overall SED. Interestingly though in the absolute mags the lowest z are not the very highest curves.  but of course in apparent mags they are farther away so they appear fainter. The general shape also changes with redshift, which has to do with how many older vs younger stars there are.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/week_2/time_evo_abs_mag_SED.png}
+    \includegraphics[width=0.8\textwidth]{figures/week_2/time_evo_abs_mag_SED.png}
     \caption{Time evolution of the spectral energy distribution of absolute magnitudes from the SIMBA snapshots, plotted as $\nu F_{\nu}$ versus wavelength $\lambda$ (assuming AB magnitudes).}
-    \label{fig:sed_z0}
+    \label{fig:time_evo_abs_mag_sed}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[hbt!]
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/week_2/time_evo_app_mag_SED.png}
+    \includegraphics[width=0.8\textwidth]{figures/week_2/time_evo_app_mag_SED.png}
     \caption{Time evolution of the spectral energy distribution of apparent magnitudes from the SIMBA snapshots, plotted as $\nu F_{\nu}$ versus wavelength $\lambda$ (assuming AB magnitudes).}
-    \label{fig:sed_z0}
+    \label{fig:time_evo_app_mag_sed}
 \end{figure}
+
+\newpage
+
+\newday{2026-01-23} Aiming to dive deeper and explore the above graphs by taking one of the redshifts and splitting it into bins of various galaxy types, e.g. star forming galaxies vs quenched galaxies, different stellar mass bins, etc.
+Going to be defining quenched galaxies using sfr (instantaneous), sfr\_100 (avg sfr over last 100My), and ssfr ($\frac{\text{sfr}}{M_*}$, $M_*$ is total galaxy stellar mass).
+
+
+
+
 
 \end{document}
 
-% \verb|\newday| is the main command provided by the \verb|researchjournal| class. It receives a single argument: a date in the \verb|yyyy-mm-dd| format. Issuing it will automatically generate the necessary chapter and sections for the year and month, respectively. This happens in addition to issuing a subsection for the specific day. The command creates the new chapter and section by comparing the date it received to the previous date issued by the user. It also checks for chronological order and for repeated days, but it can't do much about it. At most, you will get a class warning to let you know your entries are out of order. The chapter and section creation facilities do assume you are typing your entries in chronological order, so you might not get a new chapter if you type a previous year. % newday is the main command provided by the class. It inserts a daily entry and automatically checks whether it is necessary to create a new chapter (due to a new year) or a new section (due to a new month). Its sole argument is a date in the format yyyy-mm-dd. Issue the command, then write as you will in front of it.
 
-\newday{2023-01-27} Notice how writing a new day on a different year automatically creates a new chapter. Below this entry, I'm showing an example of the \verb|daybib| command. It simply prints ``References:'' in a cute manner, without any other fancy functionalities. I use it to list some references that I used throughout the day, but didn't want to list in the main paragraph (perhaps because I barely checked them, or just didn't have much to comment about them). I like to keep a comprehensive list of references so I can later check on them if I ever get a feeling like ``I once read a paper that discussed this, but what was it called again?'' % notice how a new year automatically creates a new chapter
+
 \daybib\cite{weinberg1995Foundations,weinberg1996ModernApplications}. %daybib adds the text "References: " underneath the entry. It just prints text without doing anything fancy. I use it to list references that I used on some given day, but didn't make it to the main paragraph. Notice I manually added a period at the end of the line.
 
-\newday{2023-01-28} Let us add a bit more text in here just to have a larger paragraph to work as an example. Most of my personal entries typically describe what I did in that particular day in general terms, such as ``I finished writing Section 2.3 of my thesis'', or ``Read the paper by \textcite{hawking1975ParticleCreationBlack} and really enjoyed it''. The idea is mostly to have a short and general description of how the day went so that I can recall it later when, for example, writing a report.
-
-\newday{2023-02-12} New day, new text. Notice how the new month automatically generates a new section. 
-\daybib\cite{wald1984GeneralRelativity}.
-
-\newday*{2023-02-13} If you type \verb|\newday*{yyyy-mm-dd}| (with an asterisk), the output will also include a star. I typically use this feature to tag the days in which I had meetings with my advisor, but at the end of the day it is completely up to you. Maybe you use to tag happy days or something. 
-
-\newday{2023-03-02} Notice how the headers work as a dictionary guide. The left header indicates the first entry on the page, while the right header indicates the last. 
-
 \newday{2023-03-03} References are dealt with using \verb|biblatex|. You can add your own my modifying the file \verb|bib.bib|.
-
-\end{document} % this will automatically generate a references chapter if you cited any references throughout the text

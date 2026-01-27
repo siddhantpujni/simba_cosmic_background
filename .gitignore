@@ -142,3 +142,6 @@ Thumbs.db
 
 # But keep specific compressed data if small
 !data/test_data/*.gz
+
+#Ignoring external libraries
+external/*

@@ -108,42 +108,50 @@ Created a plot in \cref{fig:time_evo_abs_mag_sed} and \cref{fig:time_evo_app_mag
 \newpage
 
 \newday{2026-01-23} Aiming to dive deeper and explore the above graphs by taking one of the redshifts and splitting it into bins of various galaxy types, e.g. star-forming galaxies vs quenched galaxies, different stellar mass bins, etc.
-Going to be defining quenched galaxies using sfr (instantaneous), sfr\_100 (avg sfr over last 100My), and ssfr ($\frac{\text{sfr}}{M_*}$, $M_*$ is total galaxy stellar mass).
+Going to be defining quenched galaxies using SFR (instantaneous), SFR\_100 (avg SFR over last 100My), and sSFR ($\frac{\text{sfr}}{M_*}$, $M_*$ is total galaxy stellar mass).
 
-Below in \cref{fig:abs_mag_mass_bins_sed} the SED is binned by stellar mass and using absolute magnitude, which was done using log(stellar\_mass) into 4 equal bins just so they're all the same ratio in ranges. i wasnt quite sure but my interpretation of these graphs was that for larger galaxies (higher stellar mass) they were much brighter than low stellar mass, with number of galaxies in that mass range also playing a role in overall flux. for higher redshifts the galaxies seem to be significantly bluer but i thought they'd be redder since older galaxies would have less younger bluer stars and be more IR dominated and redder but maybe the redshift just isn't high enough?
+Below in \cref{fig:abs_mag_mass_bins_sed} the SED is binned by stellar mass and using absolute magnitude, which was done using log(stellar\_mass) into 4 equal bins just so they're all the same ratio in ranges. i wasnt quite sure, but my interpretation of these graphs was that for larger galaxies (higher stellar mass), they were much brighter than low stellar mass, with the number of galaxies in that mass range also playing a role in overall flux. for higher redshifts, the galaxies seem to be significantly bluer, but i thought they'd be redder since older galaxies would have less younger bluer stars and be more IR dominated and redder but maybe the redshift just isn't high enough?
 Note: for z>5 there are no galaxies in the largest mass bin- implying that massive galaxies don't exist at those redshifts yet.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{figures/week_2/abs_mag_stellar_mass_binned_SED.png}
+    \includegraphics[width=0.6\textwidth]{figures/week_2/abs_mag_stellar_mass_binned_SED.png}
     \caption{Absolute Magnitude SEDs binned by stellar mass at a range of redshifts.}
     \label{fig:abs_mag_mass_bins_sed}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{figures/week_2/app_mag_stellar_mass_binned_SED.png}
+    \includegraphics[width=0.6\textwidth]{figures/week_2/app_mag_stellar_mass_binned_SED.png}
     \caption{Apparent Magnitude SEDs binned by stellar mass at a range of redshifts.}
     \label{fig:app_mag_mass_bins_sed}
 \end{figure}
 
-For plotting quenched galaxies vs star forming galaxies in \cref{fig:abs_mag_quenched_sed} and \cref{fig:app_mag_quenched_sed} I used a ssfr threshold of $10^{-11} yr^{-1}$ to define quenched galaxies, which was quoted in literature in \cite{boselliQuenchingStarFormation2016} on page 17 and also \cite{wetzelGalaxyEvolutionGroups2012}. My interpretation of these graphs was that the star forming galaxies were significantly brighter than the quenched galaxies across all wavelengths, which made sense since they have a lot more young hot blue stars contributing to overall flux. The quenched galaxies were also redder as expected since they have older cooler stars dominating their SEDs and the star forming galaxies are much bluer due to the abundance of young hot stars.
+For plotting quenched galaxies vs star-forming galaxies in \cref{fig:abs_mag_quenched_sed} and \cref{fig:app_mag_quenched_sed}, I used a ssfr threshold of $10^{-11} yr^{-1}$ to define quenched galaxies, which was quoted in literature in \cite{boselliQuenchingStarFormation2016} on page 17 and also \cite{wetzelGalaxyEvolutionGroups2012}. My interpretation of these graphs was that the star forming galaxies were significantly brighter than the quenched galaxies across all wavelengths, which made sense since they have a lot more young hot blue stars contributing to the overall flux. The quenched galaxies were also redder, as expected, since they have older, cooler stars dominating their SEDs and the star forming galaxies are much bluer due to the abundance of young hot stars.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{figures/week_2/abs_mag_quenched_starforming_SED.png}
+    \includegraphics[width=0.6\textwidth]{figures/week_2/abs_mag_quenced_starforming_SED.png}
     \caption{Absolute Magnitude SEDs binned by quenched vs star-forming galaxies at a range of redshifts.}
     \label{fig:abs_mag_quenched_sed}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{figures/week_2/app_mag_quenched_starforming_SED.png}
+    \includegraphics[width=0.6\textwidth]{figures/week_2/app_mag_quenced_starforming_SED.png}
     \caption{Apparent Magnitude SEDs binned by quenched vs star-forming galaxies at a range of redshifts.}
     \label{fig:app_mag_quenched_sed}
 \end{figure}
 
-\newday{2026-01-27} The one thing is that the sSFR cut used for quenched galaxies is quite restrictive. The typical SFR of the universe (and galaxies at a given M*) increases out to z~2.  so having an sSFR cut that doesn't evolve commensurately is not ideal. One simple cut that has proved fairly effective is sSFR_quenched(z) < 0.2 / t_H(z), where t_H is the age of the universe at redshift z. More apt definition is discussed in \cite{rodriguezmonteroMergersStarburstsQuenching2019}. I think the next thing is to combine these outputs into making a prediction for the observed cosmic SED. this means accounting for the fact that the higher-z ones will be dimmer. the easiest way is probably to make a light cone. Then can just sum up all the apparent magnitudes appropriately to get the total. Chris Lovell has made a small code to create lightcones from Simba snapshots: https://github.com/christopherlovell/simba_lightcone_generation.
+\newpage
+
+\newday{2026-01-27} The one thing is that the sSFR cut used for quenched galaxies is quite restrictive. The typical SFR of the universe (and galaxies at a given $M_*$) increases out to $z~2$. So having an sSFR cut that doesn't evolve commensurately is not ideal. One simple cut that has proved fairly effective is sSFR\_quenched(z) < 0.2 / t\_H(z), where t\_H is the age of the universe at redshift z. More apt definition is discussed in \cite{rodriguezmonteroMergersStarburstsQuenching2019}. I think the next thing is to combine these outputs into making a prediction for the observed cosmic SED. This means accounting for the fact that the higher-z ones will be dimmer. The easiest way is probably to make a light cone. Then can just sum up all the apparent magnitudes appropriately to get the total. Chris Lovell has made a small code to create lightcones from Simba snapshots: https://github.com/christopherlovell/simba\_lightcone\_generation \cite{lovellChristopherSimba_lightcone_generation2021}.
+
+\newday*{2026-01-28} Questions for meeting: 
+\begin{itemize}
+\setlength\itemsep {1em}
+    \item I am not sure how to set up the symlink for accessing the data, so I just copied over the data for now, as I didn't want to mess something up on the Cuillin.
+\end{itemize}
 
 \end{document}
 

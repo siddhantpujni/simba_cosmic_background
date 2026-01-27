@@ -115,14 +115,14 @@ Note: for z>5 there are no galaxies in the largest mass bin- implying that massi
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{figures/week_2/abs_mag_sed_stellar_mass_bins.png}
+    \includegraphics[width=0.8\textwidth]{figures/week_2/abs_mag_stellar_mass_binned_SED.png}
     \caption{Absolute Magnitude SEDs binned by stellar mass at a range of redshifts.}
     \label{fig:abs_mag_mass_bins_sed}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{figures/week_2/app_mag_sed_stellar_mass_bins.png}
+    \includegraphics[width=0.8\textwidth]{figures/week_2/app_mag_stellar_mass_binned_SED.png}
     \caption{Apparent Magnitude SEDs binned by stellar mass at a range of redshifts.}
     \label{fig:app_mag_mass_bins_sed}
 \end{figure}
@@ -142,6 +142,8 @@ For plotting quenched galaxies vs star forming galaxies in \cref{fig:abs_mag_que
     \caption{Apparent Magnitude SEDs binned by quenched vs star-forming galaxies at a range of redshifts.}
     \label{fig:app_mag_quenched_sed}
 \end{figure}
+
+\newday{2026-01-27} The one thing is that the sSFR cut used for quenched galaxies is quite restrictive. The typical SFR of the universe (and galaxies at a given M*) increases out to z~2.  so having an sSFR cut that doesn't evolve commensurately is not ideal. One simple cut that has proved fairly effective is sSFR_quenched(z) < 0.2 / t_H(z), where t_H is the age of the universe at redshift z. More apt definition is discussed in \cite{rodriguezmonteroMergersStarburstsQuenching2019}. I think the next thing is to combine these outputs into making a prediction for the observed cosmic SED. this means accounting for the fact that the higher-z ones will be dimmer. the easiest way is probably to make a light cone. Then can just sum up all the apparent magnitudes appropriately to get the total. Chris Lovell has made a small code to create lightcones from Simba snapshots: https://github.com/christopherlovell/simba_lightcone_generation.
 
 \end{document}
 

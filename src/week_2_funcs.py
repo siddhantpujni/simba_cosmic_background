@@ -5,6 +5,7 @@ import fsps
 from pathlib import Path
 import astropy.units as u
 from astropy.constants import c
+from astropy.cosmology import Planck15 as cosmo
 
 CAT_DIR = Path("/home/spujni/sim/m50n512/s50/Groups/")
 
@@ -87,15 +88,14 @@ def compute_summed_sed_from_absmags(hdf5_path, mask=None):
     nuFnu = freqs[order] * fluxes[order]
     return lam_AA, nuFnu, labels[order]
 
-def classify_galaxies(hdf5_path):
+def classify_galaxies(hdf5_path, redshift):
     """
-    Classify galaxies as star-forming or quenched.
-    
+    Classify galaxies as star-forming or quenched using evolving sSFR threshold.
+
     Parameters:
     - hdf5_path: Path to CAESAR HDF5 file
-    - sfr_threshold: SFR threshold (Msun/yr) for classification
-    - ssfr_threshold: sSFR threshold (1/yr) for classification
-    
+    - redshift: Redshift of the snapshot
+
     Returns:
     - Dictionary with classification arrays
     """
@@ -107,17 +107,21 @@ def classify_galaxies(hdf5_path):
 
     ssfr = sfr / stellar_mass
 
-    # Quenched: low SFR_100 AND low sSFR
-    quenched = ssfr < 10**(-11)  # sSFR threshold defined by paper 
+    # Evolving sSFR threshold: 0.2 / t_H(z)
+    t_H = cosmo.age(redshift).to('yr').value  # Age of universe at z in years
+    ssfr_thresh = 0.2 / t_H  # 1/yr
+
+    quenched = ssfr < ssfr_thresh
     star_forming = ~quenched
-    
+
     return {
         'sfr': sfr,
         'sfr_100': sfr_100,
         'ssfr': ssfr,
         'stellar_mass': stellar_mass,
         'quenched': quenched,
-        'star_forming': star_forming
+        'star_forming': star_forming,
+        'ssfr_thresh': ssfr_thresh
     }
 
 def get_stellar_mass_bins(stellar_mass, n_bins=5):

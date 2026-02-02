@@ -11,6 +11,9 @@
 \usepackage[margin=0.7in]{geometry}
 \usepackage{cleveref}
 \usepackage{parskip}
+\usepackage{tikz}
+\usepackage{siunitx}
+\usepackage{pgfplots}
 
 %\logo{} can be used to add a small decoration to the top of the cover page. My original idea was to put an \insergraphics command in it and load, e.g., the university logo or something
 
@@ -144,9 +147,10 @@ For plotting quenched galaxies vs star-forming galaxies in \cref{fig:abs_mag_que
 
 \newpage
 
-\newday{2026-01-27} The one thing is that the sSFR cut used for quenched galaxies is quite restrictive. The typical SFR of the universe (and galaxies at a given $M_*$) increases out to $z~2$. So having an sSFR cut that doesn't evolve commensurately is not ideal. One simple cut that has proved fairly effective is sSFR\_quenched(z) < 0.2 / t\_H(z), where t\_H is the age of the universe at redshift z. More apt definition is discussed in \cite{rodriguezmonteroMergersStarburstsQuenching2019}. I think the next thing is to combine these outputs into making a prediction for the observed cosmic SED. This means accounting for the fact that the higher-z ones will be dimmer. The easiest way is probably to make a light cone. Then can just sum up all the apparent magnitudes appropriately to get the total.
+\newday{2026-01-27} I think the next thing is to combine these outputs into making a prediction for the observed cosmic SED. This means accounting for the fact that the higher-z ones will be dimmer. The easiest way is probably to make a light cone. Then can just sum up all the apparent magnitudes appropriately to get the total.
+
 \vspace{1em} 
- 
+
 Chris Lovell has made a small code to create lightcones from Simba snapshots:\\ https://github.com/christopherlovell/simba\_lightcone\_generation (\cite{lovellChristopherSimba_lightcone_generation2021}). Looking at Chris's code it uses hardcoded paths to supercomputer cosma7 and SIMBA run with a 100 Mpc/h volume with 1024 particles. As a result, I have had to kind of repurpose the code to my use case for the run and update it. Main changes made are:
 
 Files 1-9 (above $z = 13$) have no halos, so there's no halo data, need to account for that by setting redshift range from 0 to 13 and then dropping files with higher redshift.
@@ -193,70 +197,105 @@ Constructing a lightcone from a simulation involves stitching together multiple 
 
 The resulting lightcone allows us to compute observable quantities such as the integrated cosmic background light. By summing the flux contributions from all galaxies in the lightcone---each appropriately dimmed according to its luminosity distance---we obtain a prediction for the total extragalactic background light (EBL) that would be measured by an observer. This is fundamentally different from summing galaxies at a single redshift, as it properly accounts for the fact that the galaxy population evolves with cosmic time and that more distant galaxies contribute less flux due to the inverse-square law and cosmological dimming.
 
-Questions for meeting: 
-\begin{itemize}
-\setlength\itemsep{1em}
-    \item I am not sure how to set up the symlink for accessing the data, so I just copied over the data for now, as I didn't want to mess something up on the Cuillin.
-\end{itemize}
+Not looking into by mid IR is dominated by something known as Polycyclic Aromatic Hydrocarbons (PAHs) which are essentially components of interstellar dust and one of the primary forms of carbon in the universe. 
 
-NEED TO REDO QUENCHED GALAXIES SED WITH LESS RESTRICTIVE BOUNDS AND LOOK AT A MOVING RESTRICTION THAT CHANGES AT REDSHIFT.
+Next part of the project is to look into the far IR spectrum of the cosmic SED which is mainly just from dust in the ISM. Aiming to do this by modelling the dust as a blackbody by using Plancks Law and fitting a range of different mean temperatures $T$ that best fit observational SEDs for far IR and essentially predicting the mean temperature of dust according to SIMBA. Essentially working backwards and empircally fitting a temperature that gives the most accurate/similar SED to observational papers in the far IR part. CAESAR catalogues \texttt{L\_FIR} which is essentially the total energy per second (luminosity, in erg/s) emitted by dust in a galaxy in the far IR part of the spectrum. 
 
-ssh -Y cuillin and clone repo in there and just work in there. symlink setup as 'sim'
+\begin{equation*}
+    \rho(\omega, T)
+    =
+    \cfrac{\hbar \omega^3}{\pi^2 c^3}
+    \frac{1}{\exp\big({\frac{\hbar \omega}{k_BT}} - 1\big)},
+\end{equation*}
 
-pahs is mid IR
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[samples=100, scale=1.00]
+        \begin{axis}[
+            xmin=0,
+            xlabel={$\omega$ [\si{\hertz}]},
+            ymin=0,
+            ymax=pi,
+            ylabel={$\rho (\omega; T)$ [\si{\joule\per\cubic\meter}]},
+            ytick=\empty,
+            no markers,
+            grid=both,domain=0.1:40,
+            style={ultra thick}]
+            \pgfplotsinvokeforeach{3000, 4000, 5000}
+    {
+            \addplot+
+            {(x^3)/((pi^2)*(exp(2000*x/(#1))-1))};
+            \addlegendentryexpanded{$T = #1 [\si{\kelvin}]$}
+    }
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Blackbody Spectrum for different temperatures.}
+    \label{fig:PlancksBlackbodySpectrum}
+\end{figure}
 
-look at cosmic ir spectrum for mid ir
+% look at cosmic ir spectrum for mid ir
 
-empircally fit xray pre factor value using the data what the curve should look like and we've got the prefactor that simba says we should have.
+% empircally fit xray pre factor value using the data what the curve should look like and we've got the prefactor that simba says we should have.
 
-caesar has bucket of far ir energy emissions, lfarir
+% caesar has bucket of far ir energy emissions, lfarir
 
-spectrum of dust is blackbody defined by temp and luminosity, we dont know temp and need to make assumptions about it 
-- use observations from the paper and try to work backwards to find mean dust temp of the universe and mess around with an input temperature that fits the far ir blackbody curve. and we basically plot using lfarir and then fit different temperatures to match a curve similar to observations. figure out mean temperature of dust in the universe empircally fit by basically just plotting and seeing ok what temperature actually works when trying to plot lfarir
+% spectrum of dust is blackbody defined by temp and luminosity, we dont know temp and need to make assumptions about it 
+% - use observations from the paper and try to work backwards to find mean dust temp of the universe and mess around with an input temperature that fits the far ir blackbody curve. and we basically plot using lfarir and then fit different temperatures to match a curve similar to observations. figure out mean temperature of dust in the universe empircally fit by basically just plotting and seeing ok what temperature actually works when trying to plot lfarir
 
-bin by redshift and compare to andrews, driver paper
+% bin (what) by redshift and compare to the andrews, driver paper
 
-Have made the spectra for optical and low IR wavelengths the spectra is ready. got the lightcone generating code modified for my use case as described above and then some pretty simple code to run it for actually generating the lightcone. was run for the m25n256 run however need to rerun for m50n512 but it takes absoultely ages to run.
-*ADD IMAGE HERE*
+\newpage
 
-\newday{2026-01-29} Setting up the GitHub fully on the cuillin cluster to access larger data files from Simba run instead of having to copy data over. This involved reinstalling everything on my cuillin directory (miniconda, caesar, etc.) and then making the correct environment and dealing with fsps home environment variable. Found a way to access cuillin through vscode which makes editing and running code significantly easier (especially notebooks) however I am having issues with performance and it feels super slow and am spending more time troubleshooting making cuillin and vscode work than writing any actual code. 
+\newday{2026-01-29} Setting up the GitHub repo on the cuillin cluster to access larger data files from Simba run instead of having to copy data over. This involved reinstalling everything on my cuillin directory (miniconda, caesar, etc.) and then making the correct environment and dealing with fsps home environment variable. Found a way to access cuillin through vscode which makes editing and running code significantly easier (especially notebooks) however I am having issues with performance and it feels super slow and am spending more time troubleshooting making cuillin and vscode work than writing any actual code. 
 
 Have not yet started any work on making the mid IR spectra.
 
-\newday{2026-01-30} Updated galaxy classification function for sSFR cut to be less restrictive by commensurately updating it with age of universe at redshift $z$. It is now sSFR\_quenched($z$) < 0.2 / t\_H($z$), where t\_H is the age of the universe at redshift $z$ \cite{rodriguezmonteroMergersStarburstsQuenching2019}. In \cref{fig:updated_abs_mag_quenched_sed} and \cref{fig:updated_app_mag_quenched_sed} we see very similar overall shapes and trends, the main difference is just the number of galaxies observed at different redshifts.
+\newday{2026-01-30} Romeel said one thing is that the sSFR cut you used is quite restrictive and that the typical SFR of the universe (and galaxies at a given $M_\star$) increases out to $z~2$. So I updated galaxy classification function for sSFR cut to be less restrictive by commensurately updating it with age of universe at redshift $z$. It is now sSFR\_quenched($z$) < 0.2 / t\_H($z$), where t\_H is the age of the universe at redshift $z$ \cite{rodriguezmonteroMergersStarburstsQuenching2019}. In \cref{fig:updated_abs_mag_quenched_sed} and \cref{fig:updated_app_mag_quenched_sed} we see very similar overall shapes and trends, the main difference is just the number of galaxies observed at different redshifts. We're even seeing quenched galaxies at high redshfits now rather than there being no curve.
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.6\linewidth]{figures/week_3/m25n256/updated_abs_mag_quenched_starforming_SED.png}
     \caption{Updated figure for absolute magnitude with a less restrictive cut to define what a quenched galaxy is considered to be.}
     \label{fig:updated_abs_mag_quenched_sed}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.6\linewidth]{figures/week_3/m25n256/updated_app_mag_quenched_starforming_SED.png}
     \caption{Updated figure for apparent magnitude with a less restrictive cut to define what a quenched galaxy is considered to be.}
     \label{fig:updated_app_mag_quenched_sed}
 \end{figure}
 
-Also have first major result of the project (although only for the smaller m25n256 run). In \cref{fig:optical_range_SED} we can see the flux from all galaxies in the optical part of the spectrum taken using a lightcone giving a rough idea of the optical 'colour' of the universe. 
+\noindent Also have first major result of the project (although only for the smaller m25n256 run). In \cref{fig:optical_range_SED} we can see the flux from all galaxies in the optical part of the spectrum taken using a lightcone giving a rough idea of the optical 'colour' of the universe. Done using Chris Lovell's code and as described earlier.
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.5\linewidth]{figures/week_3/m25n256/optical_lightcone_SED.png}
-    \caption{Caption}
+    \caption{Observed Cosmic SED in the Optical Range.}
     \label{fig:optical_range_SED}
 \end{figure}
 
- In \cref{fig:galaxy_number_lightcone_distribuition} is also a distribution of the number of galaxies at different redshifts found by the lighcone function
+\noindent In \cref{fig:galaxy_number_lightcone_distribuition} is also a distribution of the number of galaxies at different redshifts found by the lighcone function:
 
- \begin{figure}
+ \begin{figure}[htbp]
      \centering
      \includegraphics[width=0.5\linewidth]{figures/week_3/m25n256/lightcone_redshift_distribuition.png}
-     \caption{Caption}
+     \caption{Number of galaxies at a range of redshifts within the lightcone.}
      \label{fig:galaxy_number_lightcone_distribuition}
  \end{figure}
 
+\newpage
+
+\newday{2026-02-02}
+
+Doing research and review of current literature on modelling dust as the Planck law seems a bit too simplified and dust is not a great blackbody but more of a 'greybody' which is better fit by a modified blackbody (MBB) which is just the normal Planck Law multiplied by a power law based on the observed frequency. This term is usually some sort of emissivity function $\epsilon_\nu$ and assumes that the source is optically thin meaning light entering exits without significant absorption ($\tau \ll 1$) \cite{SubmillimeterGalaxiesAW, MBBFitsInterstellar}. Its of some form:
+
+\begin{equation*}
+    f_\nu \propto [1 - \text{exp}(-\tau_\nu)]B_\nu,
+\end{equation*}
+\noindent where $\tau_\nu$ is the frequency-dependent optical depth of the cloud, and is a multiple of $\epsilon_\nu$.
+
+Also found another recent paper which basically says that a single temp along a line of sight isn't sufficient and basically derives a gaussian distribuition of temps along the line of sight around a central mean temp. what i could do here is assume the temp distribuition is centered about some mean T which i vary and test as we were originally going to but we would also need to fit for the width of that distribuition i believe which is the dispersion. It uses the first and second derivatives of the planck function where i know we use the first to find weins law and google says the second one is the curvature and breadth of the spectrum. I would also need to correct for the CMB radiation which it gives an equation for using radiative transfer. Alternatively the easier (and i think more common approach) is just to use the MBB with a single temperature and range $T$, $\epsilon$ \cite{desertInterstellarDustEmission2022}.
 
 \end{document}
 

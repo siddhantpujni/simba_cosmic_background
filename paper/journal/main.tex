@@ -10,6 +10,7 @@
 
 \usepackage[margin=0.7in]{geometry}
 \usepackage{cleveref}
+\usepackage{parskip}
 
 %\logo{} can be used to add a small decoration to the top of the cover page. My original idea was to put an \insergraphics command in it and load, e.g., the university logo or something
 
@@ -23,8 +24,6 @@ The University of Edinburgh}
 \definecolor{CoverBackground}{HTML}{101010} %cover background
 \definecolor{CoverForeground}{HTML}{2FAEA3} %cover letters
 \definecolor{LinkColor}{HTML}{2FAEA3} %color for links
-
-\setlength\parindent{0pt}
 
 \begin{document} % this will automatically generate a simple cover
 
@@ -145,13 +144,119 @@ For plotting quenched galaxies vs star-forming galaxies in \cref{fig:abs_mag_que
 
 \newpage
 
-\newday{2026-01-27} The one thing is that the sSFR cut used for quenched galaxies is quite restrictive. The typical SFR of the universe (and galaxies at a given $M_*$) increases out to $z~2$. So having an sSFR cut that doesn't evolve commensurately is not ideal. One simple cut that has proved fairly effective is sSFR\_quenched(z) < 0.2 / t\_H(z), where t\_H is the age of the universe at redshift z. More apt definition is discussed in \cite{rodriguezmonteroMergersStarburstsQuenching2019}. I think the next thing is to combine these outputs into making a prediction for the observed cosmic SED. This means accounting for the fact that the higher-z ones will be dimmer. The easiest way is probably to make a light cone. Then can just sum up all the apparent magnitudes appropriately to get the total. Chris Lovell has made a small code to create lightcones from Simba snapshots: https://github.com/christopherlovell/simba\_lightcone\_generation \cite{lovellChristopherSimba_lightcone_generation2021}.
+\newday{2026-01-27} The one thing is that the sSFR cut used for quenched galaxies is quite restrictive. The typical SFR of the universe (and galaxies at a given $M_*$) increases out to $z~2$. So having an sSFR cut that doesn't evolve commensurately is not ideal. One simple cut that has proved fairly effective is sSFR\_quenched(z) < 0.2 / t\_H(z), where t\_H is the age of the universe at redshift z. More apt definition is discussed in \cite{rodriguezmonteroMergersStarburstsQuenching2019}. I think the next thing is to combine these outputs into making a prediction for the observed cosmic SED. This means accounting for the fact that the higher-z ones will be dimmer. The easiest way is probably to make a light cone. Then can just sum up all the apparent magnitudes appropriately to get the total.
+\vspace{1em} 
+ 
+Chris Lovell has made a small code to create lightcones from Simba snapshots:\\ https://github.com/christopherlovell/simba\_lightcone\_generation (\cite{lovellChristopherSimba_lightcone_generation2021}). Looking at Chris's code it uses hardcoded paths to supercomputer cosma7 and SIMBA run with a 100 Mpc/h volume with 1024 particles. As a result, I have had to kind of repurpose the code to my use case for the run and update it. Main changes made are:
 
-\newday*{2026-01-28} Questions for meeting: 
+Files 1-9 (above $z = 13$) have no halos, so there's no halo data, need to account for that by setting redshift range from 0 to 13 and then dropping files with higher redshift.
+
+At $z \geq 0.5$, the 1 deg$^2$ survey area is larger than the simulation box (25 Mpc). So the selection mask fails because L - A is negative.
+
+The original code contained hardcoded paths to the COSMA filesystem and assumed the \texttt{m100n1024} file naming convention. I updated these to point to my local Caesar catalogue directory and modified the file naming pattern from \texttt{m100n1024\_\{snap\}.hdf5} to \texttt{m25n256\_\{snap\}.hdf5}. Additionally, I removed the \texttt{sim\_directory} variable, which pointed to the raw simulation snapshots, as my analysis only requires the post-processed Caesar catalogues containing pre-computed galaxy properties.
+
+The original code assumed specific unit conventions from the COSMA setup, using \texttt{Mpccm} (comoving Mpc) for positions. However, I found that the Caesar files I was working with used different unit conventions that were not always recognised by \texttt{astropy}. To address this, I implemented flexible unit handling that attempts multiple approaches:
+
+\begin{verbatim}
+try:
+    pos = g.pos.to('Mpc').value
+except:
+    try:
+        pos = g.pos.value
+    except:
+        pos = np.array(g.pos)
+\end{verbatim}
+
+Similarly, for the simulation box size, I added logic to detect whether the value was stored in kpc or Mpc and convert accordingly.
+
+During initial testing, I encountered a \texttt{KeyError} indicating that \texttt{'halo\_data'} did not exist in certain files. I found that this error occurred for snapshots 001--009, which correspond to redshifts $z > 13$. At these epochs, the universe had not yet formed sufficient structure for Caesar to identify any halos or galaxies, hence, these snapshots were skipped. The main lightcone generation function then checks for these \texttt{None} returns and skips those snapshots with an informative message.
+
+Finally, I converted the code from a command-line interface using \texttt{argparse} to an importable Python function. This allows for easier integration with the Jupyter notebooks that I am using.
+
+The core lightcone generation algorithm was left the same and works as follows:
+
 \begin{itemize}
-\setlength\itemsep {1em}
+\setlength\itemsep{0.5em}
+    \item Loops through snapshots sorted by redshift
+    \item Selects galaxies within a specified spatial region projected onto RA and DEC
+    \item Assigns observed redshifts based on each galaxy's $z$-coordinate combined with the comoving distance to the snapshot
+    \item Saves the resulting lightcone to an HDF5 file containing galaxy indices, redshifts, positions, and stellar masses
+\end{itemize}
+
+\newday*{2026-01-28} 
+
+What is a lightcone?
+
+A lightcone is a geometric construct that represents the path of light travelling through spacetime from distant sources to an observer. In the context of galaxy surveys and cosmological simulations, a lightcone catalogue mimics what a real telescope would observe: galaxies at different distances are seen at different cosmic times, since light from more distant galaxies has taken longer to reach us. A galaxy observed at redshift $z = 2$, for example, is seen as it was approximately 10 billion years ago, when the universe was younger, denser, and galaxies were typically less massive and more actively star-forming.
+
+Constructing a lightcone from a simulation involves stitching together multiple simulation snapshots, each representing the universe at a specific redshift. Galaxies are selected from each snapshot based on their spatial position within a defined survey area (in angular coordinates RA and DEC) and assigned an observed redshift based on their line-of-sight distance. This approach captures the evolution of the galaxy population across cosmic time within a single catalogue, rather than treating each snapshot as an independent, instantaneous view of the universe.
+
+The resulting lightcone allows us to compute observable quantities such as the integrated cosmic background light. By summing the flux contributions from all galaxies in the lightcone---each appropriately dimmed according to its luminosity distance---we obtain a prediction for the total extragalactic background light (EBL) that would be measured by an observer. This is fundamentally different from summing galaxies at a single redshift, as it properly accounts for the fact that the galaxy population evolves with cosmic time and that more distant galaxies contribute less flux due to the inverse-square law and cosmological dimming.
+
+Questions for meeting: 
+\begin{itemize}
+\setlength\itemsep{1em}
     \item I am not sure how to set up the symlink for accessing the data, so I just copied over the data for now, as I didn't want to mess something up on the Cuillin.
 \end{itemize}
+
+NEED TO REDO QUENCHED GALAXIES SED WITH LESS RESTRICTIVE BOUNDS AND LOOK AT A MOVING RESTRICTION THAT CHANGES AT REDSHIFT.
+
+ssh -Y cuillin and clone repo in there and just work in there. symlink setup as 'sim'
+
+pahs is mid IR
+
+look at cosmic ir spectrum for mid ir
+
+empircally fit xray pre factor value using the data what the curve should look like and we've got the prefactor that simba says we should have.
+
+caesar has bucket of far ir energy emissions, lfarir
+
+spectrum of dust is blackbody defined by temp and luminosity, we dont know temp and need to make assumptions about it 
+- use observations from the paper and try to work backwards to find mean dust temp of the universe and mess around with an input temperature that fits the far ir blackbody curve. and we basically plot using lfarir and then fit different temperatures to match a curve similar to observations. figure out mean temperature of dust in the universe empircally fit by basically just plotting and seeing ok what temperature actually works when trying to plot lfarir
+
+bin by redshift and compare to andrews, driver paper
+
+Have made the spectra for optical and low IR wavelengths the spectra is ready. got the lightcone generating code modified for my use case as described above and then some pretty simple code to run it for actually generating the lightcone. was run for the m25n256 run however need to rerun for m50n512 but it takes absoultely ages to run.
+*ADD IMAGE HERE*
+
+\newday{2026-01-29} Setting up the GitHub fully on the cuillin cluster to access larger data files from Simba run instead of having to copy data over. This involved reinstalling everything on my cuillin directory (miniconda, caesar, etc.) and then making the correct environment and dealing with fsps home environment variable. Found a way to access cuillin through vscode which makes editing and running code significantly easier (especially notebooks) however I am having issues with performance and it feels super slow and am spending more time troubleshooting making cuillin and vscode work than writing any actual code. 
+
+Have not yet started any work on making the mid IR spectra.
+
+\newday{2026-01-30} Updated galaxy classification function for sSFR cut to be less restrictive by commensurately updating it with age of universe at redshift $z$. It is now sSFR\_quenched($z$) < 0.2 / t\_H($z$), where t\_H is the age of the universe at redshift $z$ \cite{rodriguezmonteroMergersStarburstsQuenching2019}. In \cref{fig:updated_abs_mag_quenched_sed} and \cref{fig:updated_app_mag_quenched_sed} we see very similar overall shapes and trends, the main difference is just the number of galaxies observed at different redshifts.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\linewidth]{figures/week_3/m25n256/updated_abs_mag_quenched_starforming_SED.png}
+    \caption{Updated figure for absolute magnitude with a less restrictive cut to define what a quenched galaxy is considered to be.}
+    \label{fig:updated_abs_mag_quenched_sed}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\linewidth]{figures/week_3/m25n256/updated_app_mag_quenched_starforming_SED.png}
+    \caption{Updated figure for apparent magnitude with a less restrictive cut to define what a quenched galaxy is considered to be.}
+    \label{fig:updated_app_mag_quenched_sed}
+\end{figure}
+
+Also have first major result of the project (although only for the smaller m25n256 run). In \cref{fig:optical_range_SED} we can see the flux from all galaxies in the optical part of the spectrum taken using a lightcone giving a rough idea of the optical 'colour' of the universe. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/week_3/m25n256/optical_lightcone_SED.png}
+    \caption{Caption}
+    \label{fig:optical_range_SED}
+\end{figure}
+
+ In \cref{fig:galaxy_number_lightcone_distribuition} is also a distribution of the number of galaxies at different redshifts found by the lighcone function
+
+ \begin{figure}
+     \centering
+     \includegraphics[width=0.5\linewidth]{figures/week_3/m25n256/lightcone_redshift_distribuition.png}
+     \caption{Caption}
+     \label{fig:galaxy_number_lightcone_distribuition}
+ \end{figure}
+
 
 \end{document}
 

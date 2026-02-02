@@ -15,14 +15,14 @@ import astropy.units as u
 import caesar
 
 # === Configuration ===
-CAT_DIR = Path("/home/sid/Documents/edinburgh/year_4/simba_cosmic_background/data/caesar_catalogues/m25n256")
-OUTPUT_DIR = Path("/home/sid/Documents/edinburgh/year_4/simba_cosmic_background/data/lightcones")
+CAT_DIR = Path("/home/spujni/sim/m50n512/s50/Groups/")
+OUTPUT_DIR = Path("/home/spujni/simba_cosmic_background/data/lightcones")
 
 
 def list_snapshots():
     """List available snapshots sorted by number."""
     snapshots = []
-    for f in CAT_DIR.glob("m25n256_*.hdf5"):
+    for f in CAT_DIR.glob("m50n512_*.hdf5"):
         snap_num = int(f.stem.split('_')[1])
         snapshots.append((snap_num, f))
     return sorted(snapshots, key=lambda x: x[0], reverse=True)  # highest snap (z=0) first
@@ -184,7 +184,7 @@ def generate_lightcone(area_deg2, z_min, z_max, output_file, verbose=True):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Generate a lightcone from m25n256')
+    parser = argparse.ArgumentParser(description='Generate a lightcone from m50n512')
     parser.add_argument('--area', type=float, default=1.0, help='Area in deg^2')
     parser.add_argument('--z_min', type=float, default=0.0, help='Min redshift')
     parser.add_argument('--z_max', type=float, default=3.0, help='Max redshift')

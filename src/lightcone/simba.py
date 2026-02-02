@@ -4,26 +4,26 @@ import caesar
 from astropy.cosmology import Planck15 as cosmo
 
 
-class simba_m25n256:
-    """Adapted simba class for m25n256 simulation."""
+class simba_m50n512:
+    """Adapted simba class for m50n512 simulation."""
     
     def __init__(self):
-        self.cs_directory = '/home/sid/Documents/edinburgh/year_4/simba_cosmic_background/data/caesar_catalogues/m25n256/'
+        self.cs_directory = '/home/spujni/sim/m50n512/s50/Groups/'
         self.cosmo = cosmo
         
-        # Box size for m25n256 is 25 Mpc/h
-        self.box_size = 25.0 
+        # Box size for m50n512 is 50 Mpc/h
+        self.box_size = 50.0 
     
     def get_caesar(self, snap, verbose=False):
         """Load a Caesar catalogue by snapshot number."""
-        fname = self.cs_directory + f'm25n256_{snap}.hdf5'
+        fname = self.cs_directory + f'm50n512_{snap}.hdf5'
         return caesar.load(fname)
     
     def get_snapshot_redshifts(self):
         """Return dict mapping snapshot number to redshift."""
         redshifts = {}
         from pathlib import Path
-        for f in Path(self.cs_directory).glob('m25n256_*.hdf5'):
+        for f in Path(self.cs_directory).glob('m50n512_*.hdf5'):
             snap = int(f.stem.split('_')[1])
             obj = caesar.load(str(f))
             redshifts[snap] = obj.simulation.redshift

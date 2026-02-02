@@ -6,14 +6,14 @@ from pathlib import Path
 import astropy.units as u
 from astropy.constants import c
 
-CAT_DIR = Path("/home/sid/Documents/edinburgh/year_4/simba_cosmic_background/data/caesar_catalogues/m25n256")
+CAT_DIR = Path("/home/spujni/sim/m50n512/s50/Groups/")
 
 def get_redshift(obj):
     for attr in ["redshift", "z"]:
         if hasattr(obj.simulation, attr):
             return float(getattr(obj.simulation, attr))
 
-def list_snapshots(cat_dir=CAT_DIR, prefix="m25n256_"):
+def list_snapshots(cat_dir=CAT_DIR, prefix="m50n512_"):
     files = sorted(cat_dir.glob(f"{prefix}*.hdf5"))
     snaps = []
     for f in files:

@@ -15,14 +15,14 @@ import astropy.units as u
 import caesar
 
 # === Configuration ===
-CAT_DIR = Path("/home/spujni/sim/m50n512/s50/Groups/")
+CAT_DIR = Path("/home/spujni/sim/m25n256/s50/Groups/")
 OUTPUT_DIR = Path("/home/spujni/simba_cosmic_background/data/lightcones")
 
 
 def list_snapshots():
     """List available snapshots sorted by number."""
     snapshots = []
-    for f in CAT_DIR.glob("m50n512_*.hdf5"):
+    for f in CAT_DIR.glob("m25n256_*.hdf5"):
         snap_num = int(f.stem.split('_')[1])
         snapshots.append((snap_num, f))
     return sorted(snapshots, key=lambda x: x[0], reverse=True)  # highest snap (z=0) first

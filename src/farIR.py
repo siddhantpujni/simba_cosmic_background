@@ -41,7 +41,7 @@ def equivalent_dust_temperature(hdf5_path):
     Returns array of T_eqv in K.
     """ 
 
-    path = "/home/spujni/sim/m25n256/s50/Groups/m25n256_100.hdf5"
+    path = "/home/spujni/sim/m25n256/s50/Groups/m25n256_110.hdf5"
 
     with h5py.File(hdf5_path, "r") as f:
         dust_mass = f["galaxy_data/dicts/masses.dust"][:] 
@@ -49,6 +49,10 @@ def equivalent_dust_temperature(hdf5_path):
         metallicity = f["galaxy_data/dicts/metallicities.mass_weighted"][:]
 
     z = get_redshift(caesar.load(str(path)))
+    
+    #print(f"the dust mas is:{dust_mass}")
+    #print(f"the metallicity is: {metallicity}")
+    #print(f"the gas mass is {gas_mass}")
 
     delta_dzr = dust_mass / (metallicity * gas_mass)
     mask = delta_dzr > 0
@@ -60,6 +64,8 @@ def equivalent_dust_temperature(hdf5_path):
 
     log_Teqv = a + b * np.log(delta_dzr/0.4) + c * np.log(1+z) - np.log(25) #from paper romeel sent
     Teqv = np.exp(log_Teqv)
+
+    # print(f"the equivalent temps are: {Teqv}")
 
     return Teqv
 
@@ -85,31 +91,16 @@ def summed_mbb(hdf5_path, beta=2.0, n_points=200):
         dlam = np.gradient(lam)
         integral = np.sum(mbb_unnorm * dlam)
         if integral <= 0 or np.isnan(integral) or np.isinf(integral):
-            continue  # Skip if normalization fails
+            continue  # Skip if normalisation fails
     
         norm = L / integral
         mbb_norm = mbb(lam, T, beta, norm=norm)
         if np.any(np.isnan(mbb_norm)) or np.any(np.isinf(mbb_norm)):
-            continue  # Skip if normalized MBB is invalid
+            continue  # Skip if normalised MBB is invalid
     
         total_sed += mbb_norm
 
+    # print(f"the total sed is: {total_sed}")
+    # print(f"the wavelength array is: {lam}")
+
     return lam, total_sed
-
-# Compute the spectrum
-hdf5_path = "/home/spujni/sim/m25n256/s50/Groups/m25n256_130.hdf5" 
-lam, total_sed = summed_mbb(hdf5_path, beta=2.0, n_points=200)
-
-# Convert wavelength from Angstrom to micron for plotting
-lam_micron = lam / 1e4
-
-plt.figure(figsize=(8,5))
-plt.plot(lam_micron, total_sed, label='Summed MBB SED')
-plt.xlabel('Wavelength (micron)')
-plt.ylabel('Luminosity (erg/s/Angstrom)')
-plt.title('Total Far-IR Dust Emission Spectrum')
-plt.legend()
-plt.xscale('log')
-plt.yscale('log')
-plt.tight_layout()
-plt.show()

@@ -1,0 +1,8 @@
+name: m50n512
+box_size_mpc_h: 50.0
+n_particles: 512
+catalogue_dir: /home/spujni/sim/m50n512/s50/Groups/
+hdf5_dir: /home/spujni/sim/m50n512/s50/Groups/
+snapshot_prefix: m50n512
+n_snapshots: 151
+cosmology: Planck15

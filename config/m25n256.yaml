@@ -1,0 +1,8 @@
+name: m25n256
+box_size_mpc_h: 25.0
+n_particles: 256
+catalogue_dir: /home/spujni/sim/m25n256/s50/Groups/
+hdf5_dir: /home/spujni/sim/m25n256/s50/Groups/
+snapshot_prefix: m25n256
+n_snapshots: 151
+cosmology: Planck15

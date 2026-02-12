@@ -145,3 +145,7 @@ Thumbs.db
 
 #Ignoring external libraries
 external/*
+
+#Directories
+graveyard/
+data/

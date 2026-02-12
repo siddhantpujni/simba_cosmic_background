@@ -1,0 +1,8 @@
+name: m100n1024
+box_size_mpc_h: 100.0
+n_particles: 1024
+catalogue_dir: /home/spujni/sim/m100n1024/s50/Groups/
+hdf5_dir: /home/spujni/sim/m100n1024/s50/Groups/
+snapshot_prefix: m100n1024
+n_snapshots: 151
+cosmology: Planck15

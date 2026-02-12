@@ -16,7 +16,7 @@ from src.backgrounds.farIR import lightcone_farIR_background
 def main():
     parser = argparse.ArgumentParser(description="Far-IR cosmic background")
     parser.add_argument("--sim", default="m25n256",
-                        choices=["m25n256", "m50n512", "m200n2048"])
+                        choices=["m25n256", "m50n512", "m100n1024"])
     parser.add_argument("--area", type=float, default=1.0)
     parser.add_argument("--z_min", type=float, default=0.0)
     parser.add_argument("--z_max", type=float, default=3.0)

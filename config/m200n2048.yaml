@@ -1,8 +1,0 @@
-name: m200n2048
-box_size_mpc_h: 200.0
-n_particles: 2048
-catalogue_dir: /home/spujni/sim/m200n2048/s50/Groups/
-hdf5_dir: /home/spujni/sim/m200n2048/s50/Groups/
-snapshot_prefix: m200n2048
-n_snapshots: 151
-cosmology: Planck15

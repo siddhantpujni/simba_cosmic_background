@@ -1,6 +1,6 @@
 """
 Usage:
-    python scripts/run_optical.py --sim m25n256 --area 1.0 --z_min 0 --z_max 3
+    python scripts/run_optical.py --sim m25n256 --area 1.0 --z_min 0 --z_max 7
 """
 import argparse
 import os
@@ -21,7 +21,7 @@ from src.backgrounds.optical import lightcone_optical_background
 def main():
     parser = argparse.ArgumentParser(description="Optical cosmic background")
     parser.add_argument("--sim", default="m25n256",
-                        choices=["m25n256", "m50n512", "m200n2048"])
+                        choices=["m25n256", "m50n512", "m100n1024"])
     parser.add_argument("--area", type=float, default=1.0)
     parser.add_argument("--z_min", type=float, default=0.0)
     parser.add_argument("--z_max", type=float, default=3.0)
@@ -52,7 +52,6 @@ def main():
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=200, bbox_inches="tight")
     print(f"Saved → {out}")
-
 
 if __name__ == "__main__":
     main()

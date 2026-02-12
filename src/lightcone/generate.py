@@ -15,7 +15,7 @@ import caesar
 from src.config import SimConfig
 from src.utils import get_redshift
 
-OUTPUT_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "lightcones"
+OUTPUT_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "lightcones" / "farIR" 
 
 def list_snapshots(cfg):
     """List available snapshots sorted by number."""

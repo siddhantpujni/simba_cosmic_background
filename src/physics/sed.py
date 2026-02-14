@@ -9,10 +9,10 @@ def mbb(wavelength_AA, temperature, beta=2.0, norm=1.0):
 
     Parameters
     ----------
-    wavelength_AA : array – wavelength in Angstrom
-    temperature   : float – dust temperature in K
-    beta          : float – emissivity index
-    norm          : float – multiplicative normalisation
+    wavelength_AA : array - wavelength in Angstrom
+    temperature   : float - dust temperature in K
+    beta          : float - emissivity index
+    norm          : float - multiplicative normalisation
     """
     lam_m = (wavelength_AA * u.AA).to(u.m).value
     lam_m = np.where(lam_m <= 0, 1e-10, lam_m)

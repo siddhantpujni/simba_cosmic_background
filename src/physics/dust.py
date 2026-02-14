@@ -26,8 +26,4 @@ def equivalent_dust_temperature(hdf5_path, redshift):
 
     T_eqv[mask] = 10**log_T
     
-    #log_T = (a + b * np.log(delta_dzr[mask] / 0.4)
-    #         + c * np.log(1 + redshift) + np.log(25))
-    #T_eqv[mask] = np.exp(log_T)
-
     return T_eqv, mask

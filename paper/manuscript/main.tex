@@ -1,0 +1,171 @@
+%   This is a template for a senior honours project report in computational astrophysics.
+\documentclass[aps,prd]{revtex4-2}
+\usepackage{tabularx}
+\usepackage{amsmath} 
+\usepackage{amssymb}
+\usepackage{graphicx} 
+\usepackage{tcolorbox} 
+\usepackage{placeins}
+\usepackage{gensymb}
+\usepackage{url}
+\usepackage{natbib}
+\usepackage[final]{hyperref} 
+\usepackage{cleveref}
+\usepackage[pdftex]{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Code listing formatting for computational work
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    commentstyle=\color{gray},
+    keywordstyle=\color{blue},
+    stringstyle=\color{red},
+    backgroundcolor=\color{lightgray!10},
+    frame=single,
+    language=Python
+}
+
+\usepackage[
+    top=2.5cm,
+    bottom=2.5cm,
+    left=2cm,
+    right=2cm,
+    footskip=1cm,
+    headsep=0.75cm,
+    columnsep=20pt,
+]{geometry}
+
+\begin{document}
+\pagestyle{empty}
+
+\par\noindent\includegraphics[width=12cm]{PandA_crest.pdf}
+
+\par\noindent
+\vspace*{2cm}
+\begin{center}
+        \Large\bf Senior Honours Project\\
+        \LARGE\bf Your Project Title on Exoplanet Detection and Analysis
+\end{center}
+\vspace*{0.5cm}
+\begin{center}
+        \bf Your Name\\
+        February 2026
+\end{center}
+\vspace*{5mm}
+
+\begin{abstract}
+        The abstract should concisely summarize the computational methods, 
+        scientific objectives, and key findings. For computational astrophysics, 
+        emphasize the algorithms, numerical techniques, and datasets used. 
+        A typical abstract should be 50-100 words and include the scientific 
+        motivation, methodology, and main results.
+\end{abstract}
+
+\vspace*{1cm}
+
+\subsubsection*{Declaration}
+
+\begin{quotation}
+  I declare that this project and report is my own work.
+\end{quotation}
+
+\vspace*{2cm}
+Signature:\hspace*{8cm}Date: \today
+
+\vfill
+{\bf Supervisor:} Dr. Name
+\hfill
+10 Weeks
+
+\newpage
+\pagestyle{plain}
+\setcounter{page}{1}
+\tableofcontents
+\newpage
+
+% Switch to two-column mode for main content
+\twocolumn
+
+\section{Introduction}
+
+The introduction should establish the scientific context and motivation for your 
+exoplanet research. Include relevant background on exoplanet detection methods, 
+your specific research questions, and how your computational approach contributes 
+to the field. The literature review should reference key observational and 
+theoretical work in exoplanet science.
+
+For computational astrophysics, discuss:
+\begin{itemize}
+    \item Existing computational methods and their limitations
+    \item Your novel approach or improvements
+    \item Expected outcomes and scientific implications
+\end{itemize}
+
+An introduction typically ends with a preview of the main results and overall structure.
+
+\section{Methods}
+
+Provide detailed descriptions of:
+
+\subsection{Computational Algorithms}
+Explain the mathematical basis and implementation details of algorithms used. 
+Include any numerical techniques, optimization methods, or statistical approaches 
+specific to your work.
+
+\subsection{Data Processing}
+Describe data sources, preprocessing steps, and any calibration procedures. 
+For observational data, detail reduction methods and quality criteria.
+
+\subsection{Software Implementation}
+Include information about programming languages, key libraries, and performance 
+considerations. Code snippets can be included for novel algorithms:
+
+\begin{lstlisting}
+# Example: velocity semi-amplitude calculation
+def velocity_amplitude(M, m, i):
+    """Calculate radial velocity amplitude"""
+    return K_factor * M * np.sin(i) / (M + m)**(2/3)
+\end{lstlisting}
+
+Standard techniques need not be detailed; reference established methods instead.
+
+\section{Results \& Discussion}
+
+Present results clearly using figures and tables. Include:
+\begin{itemize}
+    \item Numerical results with appropriate uncertainties
+    \item Comparison with theoretical predictions
+    \item Systematic error analysis
+    \item Validation of computational methods
+\end{itemize}
+
+\begin{figure}[htb]
+        \begin{center}
+        \includegraphics[width=\linewidth]{example_plot.pdf}
+        \end{center}
+    \caption{Include descriptive captions explaining axes, units, error bars, 
+    and line meanings. For multi-panel figures, label each panel clearly.}
+\end{figure}
+
+Discuss implications for exoplanet characterization and detection methods.
+
+\section{Conclusion}
+
+Summarize key findings, their significance for exoplanet science, and limitations 
+of the computational approach. Suggest improvements and future work directions.
+
+\section*{Acknowledgements}
+
+Acknowledge funding sources, computational resources, and collaborators as appropriate.
+
+% Switch back to single column for references
+\onecolumn
+
+\section*{References}
+
+\bibliographystyle{plainnat}
+\bibliography{paper/references}
+
+\end{document}

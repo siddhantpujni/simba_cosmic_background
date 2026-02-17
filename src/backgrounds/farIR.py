@@ -27,7 +27,7 @@ def _redshift_for_snap(cfg, snap):
         return get_redshift(obj)
     raise FileNotFoundError(f"Cannot get redshift for snap {snap}")
 
-def summed_mbb_single(cfg, snap, beta=2.0, n_points=200):
+def summed_mbb_single(cfg, snap, beta=2.0, n_points=500):
     """
     Rest-frame summed MBB SED for one snapshot.
     Returns wavelength (Angstrom), total SED.
@@ -43,7 +43,7 @@ def summed_mbb_single(cfg, snap, beta=2.0, n_points=200):
         lfir = f["galaxy_data/L_FIR"][:]
 
     T_eqv, mask = equivalent_dust_temperature(hdf5, z)
-    lam = np.logspace(3.5, 5, n_points)
+    lam = np.logspace(4, 5, n_points)
 
     total_sed = np.zeros_like(lam)
     for i in range(len(lfir)):
@@ -68,7 +68,7 @@ def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
     return lc_path
 
 def lightcone_farIR_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
-                                beta=2.0, n_points=300):
+                                beta=2.0, n_points=500):
     """
     Compute the far-IR cosmic background intensity by summing
     redshifted MBB SEDs from all lightcone galaxies.
@@ -85,8 +85,8 @@ def lightcone_farIR_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
         snap_arr = lc["snap"][:]
         gal_idx = lc["galaxy_index"][:]
 
-    # Observer-frame grid: ~30 µm – 1 mm
-    lam_obs = np.logspace(np.log10(3e5), np.log10(1e7), n_points)
+    # In farIR.py — DON'T extend this below ~8 µm
+    lam_obs = np.logspace(np.log10(8e4), np.log10(1e7), n_points)  # 8 µm – 1 mm
     omega_sr = area_deg2 * (np.pi / 180.0) ** 2
 
     total_intensity = np.zeros_like(lam_obs)
@@ -130,8 +130,11 @@ def lightcone_farIR_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
                 continue
 
             d_L = cfg.cosmology.luminosity_distance(gz).to(u.cm).value
-            flux = sed / (4.0 * np.pi * d_L ** 2 * (1.0 + gz))
-
+            LSUN_ERG_S = 3.828e33  # erg/s per Lsun
+            
+            # inside the galaxy loop:
+            flux = sed * LSUN_ERG_S / (4.0 * np.pi * d_L ** 2 * (1.0 + gz))
+            
             if np.all(np.isfinite(flux)):
                 total_intensity += flux
 

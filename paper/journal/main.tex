@@ -307,12 +307,12 @@ Romeel found another paper which models $T_\text{dust}$ against various properti
 
 \noindent where a, b, and c are the best fitting regression parameters a range of which are provided in table 2 in the paper. We will be going with band 6 OT-MBB values which is the optically thin modified blackbody and band 6 has a wavelength of $870\mu\text{m}$ which fits the typical range of far IR as band 7 was too high. This seemed like the most reasonable approach as far IR emission is typically from dust in the ISM which is typically assumed to be optically thin. Here $T_\text{eqv}$ is the assumed dust temperature which is conceptually different from $T_\text{eff}$ because the former is an assumed quantity for extrapolating total infrared luminosity, $L_\text{IR}$, from a single data point while the latter is a derived quantity through SED fitting to multiple data points \parencite{liangDustTemperaturesHighredshift2019}. Finally, $\delta_\text{dzr}$ is the dust to metal ratio which can be computed by (dust mass / (metallicity * gas mass)) \cite{liDusttoGasDusttoMetalsRatio2019}.
 
-This does mean the approach for far IR has been slightly altered in the sense that now I will use the temperature formula above directly as if its valid for all $z$ (even though the paper models for $2 \le z \le 6$). I can compute $\delta_\text{dzr}$ for every galaxy from catalogues and $z$ is known which gives a $T_\text{eqv}$ for each galaxy which can then be used in the MBB formula to generate a spectrum for each galaxy, then summed up to find total far IR SED. The value for the dust emissivity spectral index, $\beta$, was inferred from literature to be \~2.
+This does mean the approach for far IR has been slightly altered in the sense that now I will use the temperature formula above directly as if its valid for all $z$ (even though the paper models for $2 \le z \le 6$). I can compute $\delta_\text{dzr}$ for every galaxy from catalogues and $z$ is known which gives a $T_\text{eqv}$ for each galaxy which can then be used in the MBB formula to generate a spectrum for each galaxy, then summed up to find total far IR SED. The value for the dust emissivity spectral index, $\beta$, was inferred from literature to be $\approx 2$.
 
 \newday*{2026-02-05}
 Was not a super productive week in terms of results, however, I focused more on a literature review on what is currently out there in terms of dust modelling for simulations and planning an approach to build the far IR spectrum. Discussed this with Romeel in the meeting where we ironed out the approach and I verified the assumptions I was making for the modelling of the dust.
 
-We discussed possibly using an MCMC fit to model and fit the best fitting regression parameters a, b, c to see which produces the best spectra. Potentially looking into an MCMC for $T_{eqv}$ and $\beta$ if the current approach does not work out fully. 
+We considered possibly using an MCMC fit to model and fit the best fitting regression parameters a, b, c to see which produces the best spectra. Potentially looking into an MCMC for $T_{eqv}$ and $\beta$ if the current approach does not work out fully. 
 
 \newday{2026-02-08}
 Began by researching into the MBB and what the equation would look like. The MBB spectral energy distribution per unit wavelength is given by:
@@ -321,6 +321,7 @@ Began by researching into the MBB and what the equation would look like. The MBB
     S_\lambda(\lambda, T) = N \left( \frac{\lambda}{100\,\mu\mathrm{m}} \right)^\beta \frac{2 h c^2}{\lambda^5} \frac{1}{\exp\left(\frac{h c}{\lambda k_B T}\right) - 1},
     \label{eq:mbb}
 \end{equation}
+
 \noindent where $\lambda$ is the wavelength, $T$ is the dust temperature, $\beta$ is the dust emissivity index, $N$ is a normalisation constant, $h$ is Planck's constant, $c$ is the speed of light, and $k_B$ is Boltzmann's constant.
 
 Furthermore, to ensure the total far-infrared luminosity ($L_\mathrm{FIR}$) matches observations or model constraints, the MBB is normalised such that:
@@ -329,9 +330,7 @@ Furthermore, to ensure the total far-infrared luminosity ($L_\mathrm{FIR}$) matc
     \int S_\lambda(\lambda, T)\, d\lambda = L_\mathrm{FIR}
 \end{equation}
 
-This is achieved by computing the integral of the unnormalised SED and scaling the spectrum so its total energy output equals $L_\mathrm{FIR}$. This step was necessary to connect the theoretical SED shape to the observed or desired luminosity, ensuring physical consistency.
-
-This is the basic set-up for building the SED but right now the code computes for each individual galaxy and then sums all galaxies in a singular snapshot. However, similar to the optical SED, a lightcone will need to be used to generate the final SED to capture the effect over time/redshift. 
+This is achieved by computing the integral of the unnormalised SED and scaling the spectrum so its total energy output equals $L_\mathrm{FIR}$. This step was necessary to connect the theoretical SED shape to the observed or desired luminosity, ensuring physical consistency. This is the basic set-up for building the SED but right now the code computes for each individual galaxy and then sums all galaxies in a singular snapshot. However, similar to the optical SED, a lightcone will need to be used to generate the final SED to capture the effect over time/redshift. 
 
 \newday{2026-02-10}
 
@@ -389,7 +388,7 @@ Finally, the issue with the code was that instead of using $\log_{10}$ I was usi
 
 Very minimal differences between the different runs. NEED TO ADD INTERPRETATIONS AND TAKEAWAYS FROM THESE GRAPHS.
 
-Below I also show a graph from Simon Driver that is soon to be published (with a draft paper soon) which compares the SED of different simulations, the most relevant to SIMBA are EAGLE (Baes et al 2018) and the SHARK semi-analytic model (Lagos et al 2019). Our graphs do match up well.
+Below I also show a graph from Simon Driver in \cref{fig:driverSimulationComparison} that is soon to be published (with a draft paper soon) which compares the SED of different simulations, the most relevant to SIMBA are EAGLE (Baes et al 2018) and the SHARK semi-analytic model (Lagos et al 2019). Our graphs do match up well.
 
 \begin{figure}
     \centering
@@ -397,6 +396,21 @@ Below I also show a graph from Simon Driver that is soon to be published (with a
     \caption{Total SED across the entire wavelength spectrum for different simulations.}
     \label{fig:driverSimulationComparison}
 \end{figure}
+
+\newday*{2026-02-17}
+Meeting with Romeel today to discuss the results above. Overall shape looks mostly reasonable but the peak seems to be a little low and so dust is slightly cooler than expected (should plot dust temperature to see what it looks like) also need to extend the far IR beyond $10^3$ to explore the dip downwards which is shown in \cref{fig:driverSimulationComparison}. Need to look into changing the leading parameter/normalisation factor 'a' in \cref{eq:equivalentDustTemp} up and down to see which one puts the peak at the right spot and this can be done easily manually just inspecting by eye to fit/match to the observed data we can get from Simon Driver's upcoming paper. \footnote{could look into applying the mcmc here with his data and our farIR peak.}
+
+Finally, look into the radio part now which will just be a single point which we can find from equations 10, 11, and 12 from \cite{thomasRadioGalaxyPopulation2021}. This would be done by integrating from 5 solar masses up relative to total star formation and then multiply by a factor (not sure what factor).
+
+Create stellar mass and redshift bins for the SED plots to present results in the paper.
+
+note: \cref{eq:equivalentDustTemp} is technically only valid for a specific redshift range and we're taking it past that which is potentially why its colder than expected.
+
+%pahs and powderday for midIR if looking into publicatoins.
+%far ir is most interesting and we can look into powderday to model by radiative transfer for publication.
+%dust temps plot and extend the current far ir to see the dip, currently looks a little too cold for the peak, stellar bins for redshift and stellar mass 
+
+%powderday for pahs and summer for publish
 
 %realised the teqv formula was wrong had written - instead of + and that my logs were base and i was converting using base e and so stuff was way off
 

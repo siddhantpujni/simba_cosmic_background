@@ -14,6 +14,7 @@ from src.lightcone.generate import generate_lightcone
 
 LIGHTCONE_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "lightcones"
 
+
 def _redshift_for_snap(cfg, snap):
     """Get redshift for a snapshot, trying HDF5 attrs then Caesar."""
     hdf5 = cfg.hdf5_path(snap)
@@ -27,7 +28,8 @@ def _redshift_for_snap(cfg, snap):
         return get_redshift(obj)
     raise FileNotFoundError(f"Cannot get redshift for snap {snap}")
 
-def summed_mbb_single(cfg, snap, beta=2.0, n_points=500):
+
+def summed_mbb_single(cfg, snap, beta=2.0, n_points=500, a_dust=-0.05):
     """
     Rest-frame summed MBB SED for one snapshot.
     Returns wavelength (Angstrom), total SED.
@@ -42,7 +44,7 @@ def summed_mbb_single(cfg, snap, beta=2.0, n_points=500):
             return lam, np.zeros(n_points)
         lfir = f["galaxy_data/L_FIR"][:]
 
-    T_eqv, mask = equivalent_dust_temperature(hdf5, z)
+    T_eqv, mask = equivalent_dust_temperature(hdf5, z, a=a_dust)
     lam = np.logspace(4, 5, n_points)
 
     total_sed = np.zeros_like(lam)
@@ -54,6 +56,7 @@ def summed_mbb_single(cfg, snap, beta=2.0, n_points=500):
             total_sed += sed
 
     return lam, total_sed
+
 
 def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
     """Generate or load a cached lightcone."""
@@ -67,16 +70,27 @@ def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
     generate_lightcone(cfg, area_deg2, z_min, z_max, lc_path, verbose=True)
     return lc_path
 
+
 def lightcone_farIR_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
-                                beta=2.0, n_points=500):
+                                beta=2.0, n_points=500, a_dust=-0.05,
+                                return_dust_temps=False):
     """
     Compute the far-IR cosmic background intensity by summing
     redshifted MBB SEDs from all lightcone galaxies.
+
+    Parameters
+    ----------
+    a_dust : float
+        Leading normalisation parameter 'a' in the Liang+19 T_eqv relation.
+    return_dust_temps : bool
+        If True, also return arrays of per-galaxy dust temperatures and
+        redshifts (useful for diagnostic plots).
 
     Returns
     -------
     lam_obs   : array (Angstrom)
     intensity : array (erg/s/cm^2/sr/AA)
+    [dust_temps, dust_redshifts] : returned only when return_dust_temps=True
     """
     lc_path = build_lightcone(cfg, area_deg2, z_min, z_max)
 
@@ -85,12 +99,18 @@ def lightcone_farIR_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
         snap_arr = lc["snap"][:]
         gal_idx = lc["galaxy_index"][:]
 
-    # In farIR.py — DON'T extend this below ~8 µm
-    lam_obs = np.logspace(np.log10(8e4), np.log10(1e7), n_points)  # 8 µm – 1 mm
+    # ── Extended wavelength grid: 8 µm  →  10 mm ─────────────────
+    #    (was 1 mm; now goes to 1e8 Å = 10 mm to capture the
+    #     Rayleigh-Jeans tail / dip beyond 10^3 µm)
+    lam_obs = np.logspace(np.log10(8e4), np.log10(1e8), n_points)  # Å
     omega_sr = area_deg2 * (np.pi / 180.0) ** 2
 
     total_intensity = np.zeros_like(lam_obs)
     cache = {}
+
+    # Collectors for dust-temperature diagnostics
+    all_temps = [] if return_dust_temps else None
+    all_zs    = [] if return_dust_temps else None
 
     unique_snaps = np.unique(snap_arr)
     print(f"Processing {len(gal_z)} galaxies across "
@@ -111,7 +131,7 @@ def lightcone_farIR_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
                     print(f"  WARN: L_FIR missing in snap {snap}, skipping")
                     continue
                 lfir = f["galaxy_data/L_FIR"][:]
-            T_eqv, vmask = equivalent_dust_temperature(hdf5, z)
+            T_eqv, vmask = equivalent_dust_temperature(hdf5, z, a=a_dust)
             cache[snap] = (lfir, T_eqv, vmask)
 
         lfir, T_eqv, vmask = cache[snap]
@@ -124,20 +144,27 @@ def lightcone_farIR_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
             if not (np.isfinite(L) and np.isfinite(T) and L > 0 and T > 0):
                 continue
 
+            if return_dust_temps:
+                all_temps.append(T)
+                all_zs.append(gz)
+
             lam_rest = lam_obs / (1.0 + gz)
             sed = normalised_mbb(lam_rest, L, T, beta)
             if sed is None:
                 continue
 
             d_L = cfg.cosmology.luminosity_distance(gz).to(u.cm).value
-            LSUN_ERG_S = 3.828e33  # erg/s per Lsun
-            
-            # inside the galaxy loop:
+            LSUN_ERG_S = 3.828e33
+
             flux = sed * LSUN_ERG_S / (4.0 * np.pi * d_L ** 2 * (1.0 + gz))
-            
+
             if np.all(np.isfinite(flux)):
                 total_intensity += flux
 
     total_intensity /= omega_sr
     print("Done.")
+
+    if return_dust_temps:
+        return (lam_obs, total_intensity,
+                np.asarray(all_temps), np.asarray(all_zs))
     return lam_obs, total_intensity

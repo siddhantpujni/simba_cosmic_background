@@ -2,9 +2,17 @@ import numpy as np
 import h5py
 
 
-def equivalent_dust_temperature(hdf5_path, redshift):
+def equivalent_dust_temperature(hdf5_path, redshift, a=-0.05):
     """
     Compute equivalent dust temperature T_eqv for all galaxies.
+
+    Parameters
+    ----------
+    hdf5_path : str or Path
+    redshift  : float
+    a         : float
+        Leading normalisation parameter in the Liang+19 relation
+        (default −0.05, band-6 OT-MBB value).
 
     Returns
     -------
@@ -21,9 +29,11 @@ def equivalent_dust_temperature(hdf5_path, redshift):
 
     T_eqv = np.full(len(dust_mass), np.nan)
 
-    a, b, c = -0.05, -0.15, 0.36
-    log_T = (a + b * np.log10(delta_dzr[mask] / 0.4) + c * np.log10(1 + redshift) + np.log10(25))
+    b, c = -0.15, 0.36
+    log_T = (a + b * np.log10(delta_dzr[mask] / 0.4)
+             + c * np.log10(1 + redshift)
+             + np.log10(25))
 
     T_eqv[mask] = 10**log_T
-    
+
     return T_eqv, mask

@@ -21,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.config import load_config
 from src.backgrounds.optical import lightcone_optical_background
 from src.backgrounds.farIR import lightcone_farIR_background
+from src.backgrounds.radio import lightcone_radio_background
 
 
 def main():
@@ -30,7 +31,7 @@ def main():
                         choices=["m25n256", "m50n512", "m100n1024"])
     parser.add_argument("--area", type=float, default=1.0)
     parser.add_argument("--z_min", type=float, default=0.0)
-    parser.add_argument("--z_max", type=float, default=3.0)
+    parser.add_argument("--z_max", type=float, default=6.0)
     args = parser.parse_args()
 
     cfg = load_config(args.sim)
@@ -50,6 +51,15 @@ def main():
         cfg, area_deg2=args.area, z_min=args.z_min, z_max=args.z_max
     )
     nuInu_fir = lam_fir * I_lam_fir        # λ I_λ = ν I_ν  (erg/s/cm²/sr)
+
+    # ── Radio (star formation) ────────────────────────────────────
+    print("\n=== Radio background (SF, Condon 1992 / Thomas+2021) ===")
+    nu_radio, I_nu_radio = lightcone_radio_background(
+        cfg, area_deg2=args.area, z_min=args.z_min, z_max=args.z_max
+    )
+    lam_radio_um = (c_light / (nu_radio * u.Hz)).to_value(u.AA) * 1e-4  # → µm
+    nuInu_radio  = nu_radio * I_nu_radio
+
 
     # ── Convert to nW m⁻² sr⁻¹ (standard CIB unit) ──────────────
     # 1 erg/s/cm² = 1e-3 W/m² = 1e6 nW/m²
@@ -73,6 +83,8 @@ def main():
               label='Optical / NIR (stellar)')
     ax.loglog(lam_fir_um, fir_plot, lw=2, color='firebrick',
               label='Far-IR (dust MBB)')
+    ax.loglog(lam_radio_um, nuInu_radio, lw=2, color='forestgreen',
+                  label='Radio (SF)')
 
     # Mark crossover if it exists within overlapping range
     lam_min = max(lam_opt_um.min(), lam_fir_um.min())
@@ -104,7 +116,7 @@ def main():
     ax.legend(fontsize=12)
     ax.grid(True, which='both', ls=':', alpha=0.4)
 
-    ax.set_xlim(0.1, 1100)
+    ax.set_xlim(0.1, 3e7)   # 0.1 µm → 30 m
 
     out = Path("figures") / f"combined_bg_{cfg.name}.png"
     out.parent.mkdir(parents=True, exist_ok=True)

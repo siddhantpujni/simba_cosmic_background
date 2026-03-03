@@ -300,10 +300,10 @@ Also found another recent paper which basically says that a single temp along a 
 \newday{2026-02-03}
 Romeel found another paper which models $T_\text{dust}$ against various properties using cosmological simulations from FIRE which provides an equation that could be used to predict the dust temperature to feed into the MBB I will use \parencite{liangDustTemperaturesHighredshift2019}. Below I quote equation (15) which is a two parameter fit for $T_\text{eqv}$ with $\delta_\text{dzr}$ and redshift as predictor variables from the paper,
 
-\begin{equation*}
+\begin{equation}
     \log({T_\text{eqv}/25\text{K}) = a + b \log{(\delta_\text{dzr}/0.4)}+ c \log(1+z)},
     \label{eq:equivalentDustTemp}
-\end{equation*}
+\end{equation}
 
 \noindent where a, b, and c are the best fitting regression parameters a range of which are provided in table 2 in the paper. We will be going with band 6 OT-MBB values which is the optically thin modified blackbody and band 6 has a wavelength of $870\mu\text{m}$ which fits the typical range of far IR as band 7 was too high. This seemed like the most reasonable approach as far IR emission is typically from dust in the ISM which is typically assumed to be optically thin. Here $T_\text{eqv}$ is the assumed dust temperature which is conceptually different from $T_\text{eff}$ because the former is an assumed quantity for extrapolating total infrared luminosity, $L_\text{IR}$, from a single data point while the latter is a derived quantity through SED fitting to multiple data points \parencite{liangDustTemperaturesHighredshift2019}. Finally, $\delta_\text{dzr}$ is the dust to metal ratio which can be computed by (dust mass / (metallicity * gas mass)) \cite{liDusttoGasDusttoMetalsRatio2019}.
 
@@ -386,31 +386,37 @@ Finally, the issue with the code was that instead of using $\log_{10}$ I was usi
     \label{fig:farIR_bg_m100n1024}
 \end{figure}
 
-Very minimal differences between the different runs. NEED TO ADD INTERPRETATIONS AND TAKEAWAYS FROM THESE GRAPHS.
-
-Below I also show a graph from Simon Driver in \cref{fig:driverSimulationComparison} that is soon to be published (with a draft paper soon) which compares the SED of different simulations, the most relevant to SIMBA are EAGLE (Baes et al 2018) and the SHARK semi-analytic model (Lagos et al 2019). Our graphs do match up well.
+Very minimal differences between the different runs. NEED TO ADD INTERPRETATIONS AND TAKEAWAYS FROM THESE GRAPHS. Below I also show a graph from Simon Driver in \cref{fig:driverSimulationComparison} that is soon to be published (with a draft paper soon) which compares the SED of different simulations, the most relevant to SIMBA are EAGLE (Baes et al 2018) and the SHARK semi-analytic model (Lagos et al 2019). Our graphs do match up well.
 
 \begin{figure}
     \centering
     \includegraphics[width=0.5\linewidth]{figures/literature/eblallmodels.png}
-    \caption{Total SED across the entire wavelength spectrum for different simulations.}
+    \caption{Total SED across the entire wavelength spectrum for different simulations from Simon Drivers upcoming paper.}
     \label{fig:driverSimulationComparison}
 \end{figure}
 
+\newday{2026-02-16}
+Worked on code to combine and overplot both farIR and optical SED together on one graph to compare where which spectra dominates. This needed some units handling as there was inconsistencies across the two SEDs especially with $L_\mathrm{FIR}$ being in $L_\odot$. Results for the m25n256 run are shown in \cref{fig:combinedBGm25n256} (have not had a chance to run for bigger sims but from earlier graphs we expect this to look basically the same across them anyways:
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/combined_bg_m25n256.png}
+    \caption{Combined SED through far IR and optical regime. We can see the gap between the two this is dominated by mid IR so mainly AGN and PAHs which has not been considered here.}
+    \label{fig:combinedBGm25n256}
+\end{figure}
+
 \newday*{2026-02-17}
-Meeting with Romeel today to discuss the results above. Overall shape looks mostly reasonable but the peak seems to be a little low and so dust is slightly cooler than expected (should plot dust temperature to see what it looks like) also need to extend the far IR beyond $10^3$ to explore the dip downwards which is shown in \cref{fig:driverSimulationComparison}. Need to look into changing the leading parameter/normalisation factor 'a' in \cref{eq:equivalentDustTemp} up and down to see which one puts the peak at the right spot and this can be done easily manually just inspecting by eye to fit/match to the observed data we can get from Simon Driver's upcoming paper. \footnote{could look into applying the mcmc here with his data and our farIR peak.}
+Meeting with Romeel today to discuss the results above. Overall shape looks mostly reasonable but the peak seems to be a little low and so dust is slightly cooler than expected (should plot dust temperature to see what it looks like) also need to extend the far IR beyond $10^3$ to explore the dip downwards which is shown in \cref{fig:driverSimulationComparison}. Need to look into changing the leading parameter/normalisation factor 'a' in \cref{eq:equivalentDustTemp} up and down to see which one puts the peak at the right spot and this can be done easily manually just inspecting by eye to fit/match to the observed data we can get from Simon Driver's upcoming paper.
 
-Finally, look into the radio part now which will just be a single point which we can find from equations 10, 11, and 12 from \cite{thomasRadioGalaxyPopulation2021}. This would be done by integrating from 5 solar masses up relative to total star formation and then multiply by a factor (not sure what factor).
+Finally, look into the radio part now which will just be a single point which we can find from equations 10, 11, and 12 from \cite{thomasRadioGalaxyPopulation2021}. This would be done by integrating from 5 solar masses up relative to total star formation and then multiply by some factor (not sure what factor).
 
-Create stellar mass and redshift bins for the SED plots to present results in the paper.
-
-note: \cref{eq:equivalentDustTemp} is technically only valid for a specific redshift range and we're taking it past that which is potentially why its colder than expected.
+Create stellar mass and redshift bins for the optical and IR SED plots to present results in the paper.
 
 %pahs and powderday for midIR if looking into publicatoins.
 %far ir is most interesting and we can look into powderday to model by radiative transfer for publication.
 %dust temps plot and extend the current far ir to see the dip, currently looks a little too cold for the peak, stellar bins for redshift and stellar mass 
 
-%powderday for pahs and summer for publish
+%powderday for pahs and summer for publish would need to consider full radiative transfer powderday has some new code for pahs too.
 
 %realised the teqv formula was wrong had written - instead of + and that my logs were base and i was converting using base e and so stuff was way off
 
@@ -419,6 +425,53 @@ note: \cref{eq:equivalentDustTemp} is technically only valid for a specific reds
 %added folder sorting for generated lightcone they going to the wrong spot
 
 %just need to double check that the lightcone generation is working for the optical case, and then we can run it for all sims and make a nice plot. basically what was the logic for skipping snaps cause initially the 25mpc was too small so using 50mpc volume allows some more room to play with and less restrictive cut in general
+
+\newday{2026-03-01} Worked on implementing some of Romeels feedback in the last meeting. First thing to do was turn $a$ in \cref{eq:equivalentDustTemp} into a passable argument to vary and explore different values of it to match the ebl data from simon driver in \cref{fig:driverSimulationComparison} recreating the same peak and shape. Also 'collecting' per galaxy dust temps so for every valid galaxy we now have $T_{eqv}$ and $z$ to plot the distribution to visualise the output temps from \cref{eq:equivalentDustTemp} so I can verify them, haven't check a specific paper but remember Romeel saying the mean temp should be somewhere between 20K-40K. Below is the first diagnostic plot for trying to find the ideal normalisation factor \footnote{i do have the ebl data now so i could use a monte carlo method to find the ideal value of $a$ that best matches the peak.}. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/combined_bg_m25n256_diagnostic.png}
+    \caption{Diagnostic plot for combined fit to test equivalent dust temps and check normalisation.}
+    \label{fig:m25n256CombinedTempNormalisationDiagnostic}
+\end{figure}
+
+\noindent In \cref{fig:m25n256CombinedTempNormalisationDiagnostic} I have plotted a range of different $a$ values to see which one works best but Driver ebl data needs to be overplotted to verify. However, the main problem I'm seeing is that the curve is not dipping down as much as we expect it to at all. In \cref{fig:driverSimulationComparison} the curve is almost at zero by $10^4$ but we notice that ours only really starts to dip at that point and does not seem to follow the same curve. Furthermore, looking at the dust histogram in the bottom left across all lightcone galaxies we see that a lower, negative $a$ gives us median dust temps much closer to expectations. Looking at the far IR peak from \cref{fig:driverSimulationComparison} and comparing to the values on the bottom right of \cref{fig:m25n256CombinedTempNormalisationDiagnostic}
+
+Explanation for the temps may be that \cite{liangDustTemperaturesHighredshift2019} quotes the equation for only the specific $z$ range but we have applied it from 0 to 7 potentially introducing the discrepancy. Need to look into doing some more diagnostics and plotting $T_\mathrm{eqv}$ against some other parameters to see whats going on. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Next step is working on radio emission part of the SED. Needed to do some literature review on how to actually approach do this- Romeel gave me a paper and a rough method to follow but need to iron that out.
+
+For radio emission:
+Radio emission in many galaxies is heavily dominated by the central supermassive black hole (SMBH), particularly in active galaxies, radio-loud quasars, and elliptical galaxies. There is two sources contributing to radio luminosity non-thermal synchrotron from SNe/SNR and thermal from free-free radition in HIII regions. \cite{thomasRadioGalaxyPopulation2021} models star formation radio emission using \cite{condonRadioEmissionNormal1992} we quote equations 10 and 11,
+
+\begin{equation}
+P_{\mathrm{non\text{-}thermal}} (\mathrm{W\,Hz^{-1}})
+= 5.3 \times 10^{21}
+\left(\frac{\nu}{\mathrm{GHz}}\right)^{-0.8}
+\times \mathrm{SFR}[M \geq 5\,M_\odot],
+\end{equation}
+
+\begin{equation}
+P_{\mathrm{thermal}} (\mathrm{W\,Hz^{-1}})
+= 5.5 \times 10^{20}
+\left(\frac{\nu}{\mathrm{GHz}}\right)^{-0.1}
+\times \mathrm{SFR}[M \geq 5\,M_\odot],
+\end{equation}
+
+\noindent which are the contributions to total radio emission from thermal and non-thermal sources so total radio luminosity is $P_\nu = P_\mathrm{thermal} + P_\mathrm{non-thermal}$. $\mathrm{SFR}[M \geq 5\,M_\odot]$ is the rate of mass going into stars heavier than $5\,M_\odot$. We get this factor by computing the IMF mass fraction above $5\,M_\odot$ for the \cite{chabrierGalacticStellarSubstellar2003} IMF (learnt this in galaxies and cosmology literally today) which is:
+
+\begin{equation}
+    f_\mathrm{M\ge5} = \frac{\int_{5}^{100}m\xi(m)dm}{\int_{0.1}^{100}m\xi(m)dm}
+\end{equation}
+
+\noindent so $\mathrm{SFR[M\ge5M_\odot]=f_{M\ge5} \times \mathrm{SFR_total}}$ where I think we can simply get $\mathrm{SFR_total}$ from the \texttt{caesar} catalogues.
+
+For far IR I still need to spend a little bit more time to figure out deciding on the normalisation factor and what gives best value. Need to add the overplotting of Simon Driver EBL data and maybe implementing an MCMC for calculating $a$ using his code. 
+
+\newday{2026-03-03} Was looking at the diagnostic plots in \cref{fig:m25n256CombinedTempNormalisationDiagnostic} and the far IR aspect seemed to have the correct shape (ignoring $a$) but mirrored so I looked back over the SED and dust plotting code and found my emissivity term in the MBB had the wrong sign in the exponent $S_\lambda \propto \lambda^1$ meaning emissivity was increasing with $\lambda$ instead of decreasing which I think flipped the shape with wrong peak, now we have $S_\lambda \propto \lambda^{-1}$. 
 
 \end{document}
 

@@ -30,7 +30,7 @@ def main():
                         choices=["m25n256", "m50n512", "m100n1024"])
     parser.add_argument("--area", type=float, default=1.0)
     parser.add_argument("--z_min", type=float, default=0.0)
-    parser.add_argument("--z_max", type=float, default=3.0)
+    parser.add_argument("--z_max", type=float, default=7.0)
     args = parser.parse_args()
 
     cfg = load_config(args.sim)

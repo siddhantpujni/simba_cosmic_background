@@ -73,7 +73,7 @@ def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
 
 def lightcone_farIR_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
                                 beta=2.0, n_points=500, a_dust=-0.05,
-                                return_dust_temps=False):
+                                return_dust_temps=True):
     """
     Compute the far-IR cosmic background intensity by summing
     redshifted MBB SEDs from all lightcone galaxies.

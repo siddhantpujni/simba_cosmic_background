@@ -22,7 +22,8 @@ def mbb(wavelength_AA, temperature, beta=2.0, norm=1.0):
     x = np.clip(x, 0, 700)
 
     B_lam = (2 * h.value * c.value ** 2) / (lam_m ** 5) / np.expm1(x)
-    emissivity = (lam_m / 100e-6) ** beta
+    
+    emissivity = (100e-6 / lam_m) ** beta
 
     return norm * emissivity * B_lam
 

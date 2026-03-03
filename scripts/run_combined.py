@@ -118,7 +118,7 @@ def main():
 
     ax.set_xlim(0.1, 3e7)   # 0.1 µm → 30 m
 
-    out = Path("figures") / f"combined_bg_{cfg.name}.png"
+    out = Path("figures/combined/main") / f"combined_bg_{cfg.name}.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=200, bbox_inches='tight')
     print(f"\nSaved → {out}")

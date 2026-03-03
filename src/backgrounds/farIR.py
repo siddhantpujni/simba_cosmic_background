@@ -73,7 +73,7 @@ def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
 
 def lightcone_farIR_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
                                 beta=2.0, n_points=500, a_dust=-0.05,
-                                return_dust_temps=True):
+                                return_dust_temps=False):
     """
     Compute the far-IR cosmic background intensity by summing
     redshifted MBB SEDs from all lightcone galaxies.
@@ -99,10 +99,8 @@ def lightcone_farIR_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
         snap_arr = lc["snap"][:]
         gal_idx = lc["galaxy_index"][:]
 
-    # ── Extended wavelength grid: 8 µm  →  10 mm ─────────────────
-    #    (was 1 mm; now goes to 1e8 Å = 10 mm to capture the
-    #     Rayleigh-Jeans tail / dip beyond 10^3 µm)
-    lam_obs = np.logspace(np.log10(8e4), np.log10(1e8), n_points)  # Å
+    # ── wavelength grid: 8 µm  →  10 mm ─────────────────
+    lam_obs = np.logspace(np.log10(1.5e5), np.log10(1e8), n_points)  # Å
     omega_sr = area_deg2 * (np.pi / 180.0) ** 2
 
     total_intensity = np.zeros_like(lam_obs)

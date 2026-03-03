@@ -150,7 +150,7 @@ def main():
     ax_peak.grid(True, ls=':', alpha=0.4)
 
     # ── Save ──────────────────────────────────────────────────────
-    out = Path("figures") / f"combined_bg_{cfg.name}_diagnostic.png"
+    out = Path("figures/combined/diagnostic") / f"combined_bg_{cfg.name}_diagnostic.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=200, bbox_inches='tight')
     print(f"\nSaved → {out}")

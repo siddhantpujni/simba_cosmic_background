@@ -79,6 +79,35 @@ def radio_sed_sf(sfr_total, nu_ghz_array, f_imf=None):
 
     Returns
     -------
-    P_nu : array   –  W Hz^-1 at each frequency.
+    P_nu : array   -  W Hz^-1 at each frequency.
     """
     return radio_luminosity_sf(sfr_total, nu_ghz_array, f_imf)
+
+
+def agn_radio_luminosity(mdot_bh, nu_ghz=1.4):
+    """
+    AGN radio luminosity from black hole accretion with spectral index.
+
+    P_Rad / 1e30 erg s^-1 = Mdot_BH / 4e17 g s^-1
+
+    scaled by a power-law SED  (nu / 1.4 GHz)^{-0.7}.
+
+    Parameters
+    ----------
+    mdot_bh : float or array
+        Black hole accretion rate  [M_sun / yr].
+    nu_ghz : float or array
+        Frequency in GHz (default 1.4 GHz).
+
+    Returns
+    -------
+    P_rad : float or array
+        Radio luminosity in erg s^-1.
+    """
+    MSUN_PER_YR_TO_G_PER_S = 6.304e25          # 1 M_sun/yr → g/s
+    mdot_cgs = np.asarray(mdot_bh) * MSUN_PER_YR_TO_G_PER_S
+    nu = np.asarray(nu_ghz, dtype=float)
+
+    P_ref = (mdot_cgs / 4e17) * 1e30           # erg s^-1 at 1.4 GHz
+
+    return P_ref * (nu / 1.4) ** (-0.7)         # erg s^-1

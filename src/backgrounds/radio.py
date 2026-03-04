@@ -6,7 +6,7 @@ import caesar
 
 from src.config import SimConfig
 from src.utils import get_redshift
-from src.physics.radio import radio_luminosity_sf, CHABRIER_FRAC_M5
+from src.physics.radio import radio_luminosity_sf, agn_radio_luminosity, CHABRIER_FRAC_M5
 from src.lightcone.generate import generate_lightcone
 
 LIGHTCONE_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "lightcones"
@@ -40,20 +40,21 @@ def lightcone_radio_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
                                 n_points=500):
     """
     Compute the radio cosmic background intensity from star formation
-    using the Condon (1992) / Thomas+2021 prescription.
+    (Condon 1992 / Thomas+2021) **and** AGN accretion.
 
     For each lightcone galaxy
     -------------------------
-    1. Read total SFR from the CAESAR HDF5 catalogue.
-    2. Compute  SFR[M >= 5 Msun] = f_IMF × SFR_total   (Chabrier IMF).
-    3. At each *rest-frame* frequency  ν_rest = ν_obs (1+z),
-       evaluate P_ν(ν_rest) via Condon (1992) eqs 10+11.
-    4. Convert to observed flux  F_ν = (1+z) P_ν / (4π d_L²).
+    SF  :  P_ν(ν_rest) via Condon (1992) eqs 10+11          [W Hz⁻¹]
+    AGN :  P_rad(ν_rest) from Mdot_BH relation + ν^{-0.7}   [erg s⁻¹ Hz⁻¹]
+
+    Observed flux:  F_ν = (1+z) P_ν / (4π d_L²)
 
     Returns
     -------
-    nu_obs   : array (Hz)               – observed frequency grid
-    intensity : array (erg/s/cm²/Hz/sr) – specific intensity
+    nu_obs    : array (Hz)               – observed frequency grid
+    intensity : array (erg/s/cm²/Hz/sr)  – total specific intensity
+    intensity_sf  : array                – SF-only component
+    intensity_agn : array                – AGN-only component
     """
     lc_path = build_lightcone(cfg, area_deg2, z_min, z_max)
 
@@ -66,7 +67,8 @@ def lightcone_radio_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
     nu_obs_hz = np.logspace(np.log10(1e7), np.log10(1e11), n_points)  # Hz
     omega_sr  = area_deg2 * (np.pi / 180.0) ** 2
 
-    total_flux = np.zeros_like(nu_obs_hz)   # erg/s/cm²/Hz
+    total_flux_sf  = np.zeros_like(nu_obs_hz)   # erg/s/cm²/Hz
+    total_flux_agn = np.zeros_like(nu_obs_hz)
     cache = {}
 
     unique_snaps = np.unique(snap_arr)
@@ -86,37 +88,47 @@ def lightcone_radio_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
                 if "galaxy_data/sfr" not in f:
                     print(f"  WARN: SFR missing in snap {snap}, skipping")
                     continue
-                sfr = f["galaxy_data/sfr"][:]
-            cache[snap] = sfr
+                sfr   = f["galaxy_data/sfr"][:]
+                bhmdot = (f["galaxy_data/bhmdot"][:]
+                          if "galaxy_data/bhmdot" in f
+                          else np.zeros_like(sfr))
+            cache[snap] = (sfr, bhmdot)
 
-        sfr = cache[snap]
+        sfr, bhmdot = cache[snap]
 
         for gi, gz in zip(gal_idx[smask], gal_z[smask]):
             gi = int(gi)
             if gi >= len(sfr):
                 continue
 
-            sfr_gal = sfr[gi]
-            if not (np.isfinite(sfr_gal) and sfr_gal > 0):
-                continue
+            sfr_gal   = sfr[gi]
+            bhmdot_gal = bhmdot[gi]
 
             # Rest-frame frequencies for observed grid
             nu_rest_ghz = nu_obs_hz * (1.0 + gz) / 1e9
 
-            # Rest-frame radio luminosity at each frequency (W/Hz)
-            P_nu = radio_luminosity_sf(sfr_gal, nu_rest_ghz)
+            # Luminosity distance  (cm)
+            d_L = cfg.cosmology.luminosity_distance(gz).to(u.cm).value
+            prefactor = (1.0 + gz) / (4.0 * np.pi * d_L ** 2)
 
-            # Convert  W/Hz → erg/s/Hz  (1 W = 1e7 erg/s)
-            P_nu_cgs = P_nu * 1e7
+            # ── SF contribution ──────────────────────────────
+            if np.isfinite(sfr_gal) and sfr_gal > 0:
+                P_nu_sf = radio_luminosity_sf(sfr_gal, nu_rest_ghz)  # W/Hz
+                P_nu_sf_cgs = P_nu_sf * 1e7                          # erg/s/Hz
+                flux_sf = prefactor * P_nu_sf_cgs
+                if np.all(np.isfinite(flux_sf)):
+                    total_flux_sf += flux_sf
 
-            # Observed flux density:  F_ν = (1+z) L_ν / (4π d_L²)
-            d_L  = cfg.cosmology.luminosity_distance(gz).to(u.cm).value
-            flux = (1.0 + gz) * P_nu_cgs / (4.0 * np.pi * d_L ** 2)
-
-            if np.all(np.isfinite(flux)):
-                total_flux += flux
+            # ── AGN contribution ─────────────────────────────
+            if np.isfinite(bhmdot_gal) and bhmdot_gal > 0:
+                P_agn = agn_radio_luminosity(bhmdot_gal, nu_rest_ghz)  # erg/s/Hz
+                flux_agn = prefactor * P_agn
+                if np.all(np.isfinite(flux_agn)):
+                    total_flux_agn += flux_agn
 
     # Convert summed flux to surface brightness
-    intensity = total_flux / omega_sr
+    intensity_sf  = total_flux_sf  / omega_sr
+    intensity_agn = total_flux_agn / omega_sr
+    intensity     = intensity_sf + intensity_agn
     print("Done.")
-    return nu_obs_hz, intensity
+    return nu_obs_hz, intensity, intensity_sf, intensity_agn

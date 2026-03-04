@@ -1,5 +1,5 @@
 """
-Combined optical + far-IR cosmic background.
+Combined optical + far-IR + radio cosmic background.
 
 Usage:
     python scripts/run_combined.py --sim m25n256 --area 1.0 --z_min 0 --z_max 3
@@ -52,9 +52,9 @@ def main():
     )
     nuInu_fir = lam_fir * I_lam_fir        # λ I_λ = ν I_ν  (erg/s/cm²/sr)
 
-    # ── Radio (star formation) ────────────────────────────────────
-    print("\n=== Radio background (SF, Condon 1992 / Thomas+2021) ===")
-    nu_radio, I_nu_radio = lightcone_radio_background(
+    # ── Radio (SF + AGN) ──────────────────────────────────────────
+    print("\n=== Radio background (SF + AGN) ===")
+    nu_radio, I_nu_radio, _, _ = lightcone_radio_background(
         cfg, area_deg2=args.area, z_min=args.z_min, z_max=args.z_max
     )
     lam_radio_um = (c_light / (nu_radio * u.Hz)).to_value(u.AA) * 1e-4  # → µm
@@ -84,7 +84,9 @@ def main():
     ax.loglog(lam_fir_um, fir_plot, lw=2, color='firebrick',
               label='Far-IR (dust MBB)')
     ax.loglog(lam_radio_um, nuInu_radio, lw=2, color='forestgreen',
-                  label='Radio (SF)')
+              label='Radio (SF + AGN)')
+    ax.loglog(lam_radio_um, nuInu_radio, lw=2, color='forestgreen',
+              label='Radio (SF + AGN)')
 
     # Mark crossover if it exists within overlapping range
     lam_min = max(lam_opt_um.min(), lam_fir_um.min())

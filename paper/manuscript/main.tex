@@ -1,94 +1,70 @@
-%   This is a template for a senior honours project report in computational astrophysics.
-\documentclass[aps,prd]{revtex4-2}
-\usepackage{tabularx}
-\usepackage{amsmath} 
-\usepackage{amssymb}
-\usepackage{graphicx} 
-\usepackage{tcolorbox} 
-\usepackage{placeins}
-\usepackage{gensymb}
-\usepackage{url}
-\usepackage{natbib}
-\usepackage[final]{hyperref} 
-\usepackage{cleveref}
-\usepackage[pdftex]{graphicx}
-\usepackage{listings}
-\usepackage{xcolor}
+\documentclass[
+    a4paper, % Paper size, use either a4paper or letterpaper
+    10pt, % Default font size, can also use 11pt or 12pt, although this is not recommended
+    unnumberedsections, % Comment to enable section numbering
+]{LTJournalArticle}
 
-% Code listing formatting for computational work
-\lstset{
-    basicstyle=\ttfamily\small,
-    breaklines=true,
-    commentstyle=\color{gray},
-    keywordstyle=\color{blue},
-    stringstyle=\color{red},
-    backgroundcolor=\color{lightgray!10},
-    frame=single,
-    language=Python
+\usepackage{subfig} % grace added this to add plots in side by side! sorry didn't know where else to put it. feel free to move / remove
+\usepackage{amsmath}
+\usepackage{cleveref}
+\usepackage{stfloats}
+\usepackage{float}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=magenta,
+    citecolor=magenta,
+    urlcolor=magenta
 }
 
-\usepackage[
-    top=2.5cm,
-    bottom=2.5cm,
-    left=2cm,
-    right=2cm,
-    footskip=1cm,
-    headsep=0.75cm,
-    columnsep=20pt,
-]{geometry}
+\runninghead{The Colour of Simba's Universe} 
 
 \begin{document}
-\pagestyle{empty}
-
-\par\noindent\includegraphics[width=12cm]{PandA_crest.pdf}
-
-\par\noindent
+\epsfxsize=40mm                         % Size of crest
+\thispagestyle{empty} % This removes the running head from the top corner
+\begin{minipage}[b]{110mm}
+        {\Huge\bf School of Physics \\and Astronomy
+        \vspace*{17mm}}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{40mm}               
+        \makebox[40mm]{
+        \includegraphics[width=40mm]{figures/manuscript/UoEcrest.pdf}}
+\end{minipage}
+\par\noindent                                           % Centre Title, and name
 \vspace*{2cm}
 \begin{center}
-        \Large\bf Senior Honours Project\\
-        \LARGE\bf Your Project Title on Exoplanet Detection and Analysis
+        \huge\bf The Extragalactic Background Predicted by the SIMBA Simulations
 \end{center}
-\vspace*{0.5cm}
+\vspace*{1cm}
 \begin{center}
-        \bf Your Name\\
-        February 2026
+        \bf 
+        \large
+        Siddhant Pujni
+        \vspace{0.5cm} \\
+        March 2026                         % Submission Date
 \end{center}
 \vspace*{5mm}
 
 \begin{abstract}
-        The abstract should concisely summarize the computational methods, 
-        scientific objectives, and key findings. For computational astrophysics, 
-        emphasize the algorithms, numerical techniques, and datasets used. 
-        A typical abstract should be 50-100 words and include the scientific 
-        motivation, methodology, and main results.
+We present ground-based transit photometry of the hot Jupiter WASP-135b obtained using the Physics Innovations Robotic Astronomical Telescope Explorer (PIRATE). The images were calibrated using standard CCD reduction procedures and analysed via differential aperture photometry to extract its transit light curve. We also obtained and used standard star photometry to determine atmospheric extinction coefficients and calibrated magnitudes for WASP-135, and determine its classification to be a K2 star. This result lies within the 1$\sigma$ confidence region. We model the transit light curve in two ways: one with the impact parameter ($b$) sampled freely and one where $b$ is fixed to the literature value ($b$ = 0.80). For the fixed-$b$ model we obtain a planetary radius of \,$1.633^{+0.722}_{-0.350}\,R_\mathrm{J}$, a mass of $1.990^{+0.395}_{-0.236}\,M_\mathrm{J}$, a transit depth of $0.02175^{+0.00091}_{-0.00090}$, and a transit duration of $0.0662^{+0.0021}_{-0.0020}$\,days. The sampled-$b$ model yields a consistent mass of $1.973^{+0.391}_{-0.235}M_{\mathrm{Jup}}$, but a smaller radius of $1.452^{+0.636}_{-0.312}R_{\mathrm{Jup}}$. Overall, our results demonstrate that a 0.4-m class ground-based robotic telescope can recover physically plausible system parameters for a known exoplanet from a single observed transit epoch.
 \end{abstract}
 
-\vspace*{1cm}
-
-\subsubsection*{Declaration}
-
-\begin{quotation}
-  I declare that this project and report is my own work.
-\end{quotation}
-
-\vspace*{2cm}
-Signature:\hspace*{8cm}Date: \today
+\vspace*{4cm}
 
 \vfill
-{\bf Supervisor:} Dr. Name
-\hfill
-10 Weeks
-
-\newpage
-\pagestyle{plain}
-\setcounter{page}{1}
-\tableofcontents
+\begin{center}
+    {\bf Supervisor:} Professor Romeel Davé               
+\end{center}
 \newpage
 
-% Switch to two-column mode for main content
 \twocolumn
+\setcounter{page}{1} % Set this page as the first numbered page
+
 
 \section{Introduction}
+
+\cite{baesCosmicSpectralEnergy2019}
 
 The introduction should establish the scientific context and motivation for your 
 exoplanet research. Include relevant background on exoplanet detection methods, 
@@ -122,13 +98,6 @@ For observational data, detail reduction methods and quality criteria.
 Include information about programming languages, key libraries, and performance 
 considerations. Code snippets can be included for novel algorithms:
 
-\begin{lstlisting}
-# Example: velocity semi-amplitude calculation
-def velocity_amplitude(M, m, i):
-    """Calculate radial velocity amplitude"""
-    return K_factor * M * np.sin(i) / (M + m)**(2/3)
-\end{lstlisting}
-
 Standard techniques need not be detailed; reference established methods instead.
 
 \section{Results \& Discussion}
@@ -160,12 +129,12 @@ of the computational approach. Suggest improvements and future work directions.
 
 Acknowledge funding sources, computational resources, and collaborators as appropriate.
 
-% Switch back to single column for references
-\onecolumn
+%%% References %%%
+%\renewcommand{\refname}{References}
+%\addcontentsline{toc}{section}{References}
+%\printbibliography
 
-\section*{References}
-
-\bibliographystyle{plainnat}
+\bibliographystyle{mnras}
 \bibliography{paper/references}
 
 \end{document}

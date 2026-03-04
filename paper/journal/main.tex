@@ -440,9 +440,9 @@ Create stellar mass and redshift bins for the optical and IR SED plots to presen
 Explanation for the temps may be that \cite{liangDustTemperaturesHighredshift2019} quotes the equation for only the specific $z$ range but we have applied it from 0 to 7 potentially introducing the discrepancy. Need to look into doing some more diagnostics and plotting $T_\mathrm{eqv}$ against some other parameters to see whats going on. 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RADIO EMISSION
 
-Next step is working on radio emission part of the SED. Needed to do some literature review on how to actually approach do this- Romeel gave me a paper and a rough method to follow but need to iron that out.
+Next step is working on radio emission part of the SED. Needed to do some literature review on how to actually approach do this- Romeel gave me a paper and a rough method to follow but need to iron that out. Outline approach in more detail below
 
 For radio emission:
 Radio emission in many galaxies is heavily dominated by the central supermassive black hole (SMBH), particularly in active galaxies, radio-loud quasars, and elliptical galaxies. There is two sources contributing to radio luminosity non-thermal synchrotron from SNe/SNR and thermal from free-free radition in HIII regions. \cite{thomasRadioGalaxyPopulation2021} models star formation radio emission using \cite{condonRadioEmissionNormal1992} we quote equations 10 and 11,
@@ -469,12 +469,59 @@ P_{\mathrm{thermal}} (\mathrm{W\,Hz^{-1}})
 
 \noindent so $\mathrm{SFR[M\ge5M_\odot]=f_{M\ge5} \times \mathrm{SFR_total}}$ where I think we can simply get $\mathrm{SFR_total}$ from the \texttt{caesar} catalogues.
 
+Current implementation does only massive star formation which is greater than 5 solar masses, there is no AGN jets modelled yet which \cite{thomasRadioGalaxyPopulation2021} does analyse and discuss in the paper
+
 For far IR I still need to spend a little bit more time to figure out deciding on the normalisation factor and what gives best value. Need to add the overplotting of Simon Driver EBL data and maybe implementing an MCMC for calculating $a$ using his code. 
 
-\newday{2026-03-03} Was looking at the diagnostic plots in \cref{fig:m25n256CombinedTempNormalisationDiagnostic} and the far IR aspect seemed to have the correct shape (ignoring $a$) but mirrored so I looked back over the SED and dust plotting code and found my emissivity term in the MBB had the wrong sign in the exponent $S_\lambda \propto \lambda^1$ meaning emissivity was increasing with $\lambda$ instead of decreasing which I think flipped the shape with wrong peak, now we have $S_\lambda \propto \lambda^{-1}$. 
+\newday{2026-03-03} Was looking at the diagnostic plots in \cref{fig:m25n256CombinedTempNormalisationDiagnostic} and the far IR aspect seemed to have the correct shape (ignoring $a$) but mirrored so I looked back over the SED and dust plotting code and found my emissivity term in the MBB had the wrong sign in the exponent $S_\lambda \propto \lambda^1$ meaning emissivity was increasing with $\lambda$ instead of decreasing which I think flipped the shape with wrong peak, now we have $S_\lambda \propto \lambda^{-1}$. The updated and corrected plot is shown below:
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/combined/main/combined_bg_m25n256.png}
+    \caption{Updated combined plot with corrected far IR peak and radio emission.}
+    \label{fig:placeholder}
+\end{figure}
+
+
+\newday*{2026-03-04} Show Romeel all results for temp diagnostics and the radio emission combined plot. I still need to add the AGN feedback radio emission which will likely dominated the spectrum but \cite{thomasRadioGalaxyPopulation2021} quotes an equation with no $\nu$ dependence so I am not sure to approach this. The equation is 
+
+\begin{equation}
+    \frac{P_\mathrm{Rad}}{10^{30}{\mathrm{erg}\textrm{s^{-1}}} = \frac{\dot{M_{BH}}}{4\times10^{17}\textrm{g s^{-1}}}
+    \label{agnRadioEmission}
+\end{equation}
+
+After meeting with Romeel he suggested I could assume a power law of $\nu^{-0.7}$ to add frequency dependence. This is known as the spectral index for AGN. I would just normalise the bolometric relation against 1.4 GHz so I can evaluate the AGN radio emission across a frequency grid.
+
+
+bin it by redshfit to see the contribution from each aspect and just nice plots to have in the report as well
+
+minimise to find best a
+
+background: 
+general and why?
+
+methods:
+"things that were done"
+
+section on simba, tell what i did, included these physics, describe caesar, go optical far ir and radio and one by one 
+can mention alternative to run full radiative transfer code in part temps from that code are too high 50K should be 30-40K and so a better approach was the mbb and stuff. asking based on sim assuming single mbb what kinda dust temp do we get rather than other way 
+
+
+
+
+
+
+
+
 
 \end{document}
 
 \daybib\parencite{weinberg1995Foundations,weinberg1996ModernApplications}. %daybib adds the text "References: " underneath the entry. It just prints text without doing anything fancy. I use it to list references that I used on some given day, but didn't make it to the main paragraph. Notice I manually added a period at the end of the line.
+
+
+
+
+
+
 
 \newday{2023-03-03} References are dealt with using \verb|biblatex|. You can add your own my modifying the file \verb|bib.bib|.

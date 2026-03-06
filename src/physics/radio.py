@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import integrate
 
-def _chabrier_imf(m):
+def chabrier_imf(m):
     """Chabrier (2003) system IMF  ξ(m) = dn/dm."""
     if m < 1.0:
         return (0.158 / m) * np.exp(
@@ -23,7 +23,7 @@ def chabrier_mass_fraction(m_low=5.0, m_min=0.1, m_max=100.0):
     -------
     f : float   (≈ 0.17 for m_low = 5 M_sun)
     """
-    mass_weighted = lambda m: m * _chabrier_imf(m)
+    mass_weighted = lambda m: m * chabrier_imf(m)
     total, _ = integrate.quad(mass_weighted, m_min, m_max)
     above, _ = integrate.quad(mass_weighted, m_low, m_max)
     return above / total

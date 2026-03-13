@@ -90,12 +90,18 @@ An introduction typically ends with a preview of the main results and overall st
 
 \section{Methods}
 
-\subsection{Lightcones}
-A lightcone is a geometric construct typically seen in special relativity that represents the path of light travelling through spacetime from distant sources to an observer. In our context of galaxy surveys and cosmological simulations, a lightcone catalogue allows us to mimic what a real telescope would observe: galaxies at different distances are seen at different cosmic times, since light from more distant galaxies has taken longer to reach us.
+\subsection{Cosmological Simulations}
+There are two main types of simulations seen in modern cosmology; Hydrodynamical Simulations or Semi-Analytic Models (SAMs). The two can be differentiated by their level of complexity and depth by which they explore galaxy evolution and feedback \cite{neisteinHydrodynamicalSimulationsSemianalytic2012}.
 
-Constructing a lightcone from a simulation involves stitching together multiple simulation snapshots, each representing the universe at a specific redshift. Galaxies are selected from each snapshot based on their spatial position within a defined survey area (in angular coordinates RA and DEC) and assigned an observed redshift based on their line-of-sight distance. This approach captures the evolution of the galaxy population across cosmic time within a single catalogue, rather than treating each snapshot as an independent, instantaneous view of the universe.
+\subsection{Light Cones}
 
-The resulting lightcone allows us to compute the necessary observable quantities such as the integrated cosmic background spectrum to form the respective SED for each electromagnetic spectrum component. By summing the flux contributions from all galaxies in the lightcone, each appropriately dimmed according to its luminosity distance, we obtain a prediction for the total EBL that would be measured by an observer. This is fundamentally different from summing galaxies at a single redshift, as it properly accounts for the fact that the galaxy population evolves with cosmic time and that more distant galaxies contribute less flux due to the inverse-square law and cosmological dimming.
+talk about frustums and making plots
+
+A light cone is a geometric construct typically seen in special relativity that represents the path of light travelling through spacetime from distant sources to an observer. In our context of galaxy surveys and cosmological simulations, a light cone catalogue allows us to mimic what a real telescope would observe: galaxies at different distances are seen at different cosmic times, since light from more distant galaxies has taken longer to reach us.
+
+Constructing a light cone from a simulation involves stitching together multiple simulation snapshots, each representing the universe at a specific redshift. Galaxies are selected from each snapshot based on their spatial position within a defined survey area (in angular coordinates RA and DEC) and assigned an observed redshift based on their line-of-sight distance. This approach captures the evolution of the galaxy population across cosmic time within a single catalogue, rather than treating each snapshot as an independent, instantaneous view of the universe.
+
+The resulting light cone allows us to compute the necessary observable quantities such as the integrated cosmic background spectrum to form the respective SED for each electromagnetic spectrum component. By summing the flux contributions from all galaxies in the lightcone, each appropriately dimmed according to its luminosity distance, we obtain a prediction for the total EBL that would be measured by an observer. This is fundamentally different from summing galaxies at a single redshift, as it properly accounts for the fact that the galaxy population evolves with cosmic time and that more distant galaxies contribute less flux due to the inverse-square law and cosmological dimming.
 
 This was implemented by adapting the code Chris Lovell wrote in \cite{lovellChristopherSimba_lightcone_generation2021}. The first consideration was that snapshots 1-9 (above $z = 13$) have no halos, so there's no halo data, need to account for that by setting redshift range from 0 to 13 and then dropping files with higher redshift.
 
@@ -117,21 +123,21 @@ except:
 
 Similarly, for the simulation box size, I added logic to detect whether the value was stored in kpc or Mpc and convert accordingly.
 
-During initial testing, I encountered a \texttt{KeyError} indicating that \texttt{'halo\_data'} did not exist in certain files. I found that this error occurred for snapshots 001--009, which correspond to redshifts $z > 13$. At these epochs, the universe had not yet formed sufficient structure for Caesar to identify any halos or galaxies, hence, these snapshots were skipped. The main lightcone generation function then checks for these \texttt{None} returns and skips those snapshots with an informative message.
+During initial testing, I encountered a \texttt{KeyError} indicating that \texttt{'halo\_data'} did not exist in certain files. I found that this error occurred for snapshots 001--009, which correspond to redshifts $z > 13$. At these epochs, the universe had not yet formed sufficient structure for Caesar to identify any halos or galaxies, hence, these snapshots were skipped. The main light cone generation function then checks for these \texttt{None} returns and skips those snapshots with an informative message.
 
 Finally, I converted the code from a command-line interface using \texttt{argparse} to an importable Python function. This allows for easier integration with the Jupyter notebooks that I am using.
 
-The core lightcone generation algorithm was left the same and works as follows:
+The core light cone generation algorithm was left the same and works as follows:
 
 \begin{itemize}
 \setlength\itemsep{0.5em}
     \item Loops through snapshots sorted by redshift
     \item Selects galaxies within a specified spatial region projected onto RA and DEC
     \item Assigns observed redshifts based on each galaxy's $z$-coordinate combined with the comoving distance to the snapshot
-    \item Saves the resulting lightcone to an HDF5 file containing galaxy indices, redshifts, positions, and stellar masses
+    \item Saves the resulting light cone to an HDF5 file containing galaxy indices, redshifts, positions, and stellar masses
 \end{itemize}
 
-One lightcone was generated for the premier SIMBA run for a $100$ Mpc/h volume with $1024^3$ gas and dark matter particles which was then the basis for generating each part of the total EBL
+A light cone was generated for the $100$ Mpc/h volume with $1024^3$ gas and dark matter particles run of SIMBA which was then the basis for generating the EBL.
 
 \subsection{The Optical Regime}
 
@@ -178,8 +184,7 @@ Discuss implications for exoplanet characterization and detection methods.
 
 \section{Conclusion}
 
-Summarize key findings, their significance for exoplanet science, and limitations 
-of the computational approach. Suggest improvements and future work directions.
+use full radiative transfer code for the dust and far IR emission
 
 \section*{Acknowledgements}
 

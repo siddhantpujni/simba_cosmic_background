@@ -539,10 +539,134 @@ overall report how do i add/discuss error values on stuff
 
 --> questions for Romeel in next meeting
 
+Also while making some preliminary plots for find $a$ there seems to be some volume based dependency on the plots when using different sims and they fit the EBL data slightly different. This is shown below:
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/combined/diagnostics/simulated_observed_overplot_m25n256}
+    \caption{The simulated data from SIMBA for the full optical, far IR, radio SED overploted on the observational data from Simon Driver to compare.}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/combined/diagnostics/simulated_observed_overplot_m50n512}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/combined/diagnostics/simulated_observed_overplot_m100n1024}
+\end{figure}
+\noindent we can see that there is differences in the plots, namely for the larger sims the the radio fit seems to be worse and the optical fit seems to get better. Basically for the bigger sims there's more galaxies and so more flux and so the total sum of 'stuff' is much more for the larger sims which is why the plots just slowly move upwards across them as you get more flux and the fits seem to get 'worse'.
+
 \newday{2026-03-07}
 
-so have decided to first minimise the peak between Driver EBL data and my SED for the far IR regime. Was going to initially do this with \texttt{scipy.optimize.minimize} but that requires a continuous function which I don't have and adding in an interpolation step for between the data points is not great and Romeel said to try and avoid, its better to use the original discrete data. Currently what i have done is run a 'far IR sweep' where i've basically run the m25n256 version for a range of $a$ from -0.25 to 0.25 with 50 values and these will be tested. initially being done for m25n256 but needs to be redone for m100n1024. Also while making some preliminary plots there seems to be some volume based dependency on the plots when using different sims and they fit the EBL data slightly different. This is shown below
+so have decided to first minimise just the peak between Driver EBL data and my SED instead of the entire curve for the far IR regime. Was going to initially do this with \texttt{scipy.optimize.minimize} but that requires a continuous function which I don't have and adding in an interpolation step for between the data points is not great and Romeel said to try and avoid, its better to use the original discrete data rather than over engineering. Currently what i have done is a 'far IR sweep' where i've basically run the m25n256 version for a range of $a$ from -1 to 1 with 200 values and these will be tested. initially being done for m25n256 but needs to be redone for m100n1024. the current set up is just matching the peaks of the two datasets.
 
+\newday{2026-03-08} Realised when I was passing $a$ into the MBB function it was getting over written later when passed at a later point and so it wasn't actually getting changed for some plots, going to just double check all these plots. Also problem I am running into, obviously the larger volume sims generate more flux as mentioned above so deciding on $a$ values from m25n256 to run everything seems to be just lower in terms of total fluxes. Going to narrow down the range using m25n256 and then apply that range to a sweep on m100n1024 to find the best possible $a$ value
+
+\newday{2026-03-09} Had to fix admin and run a lot of the sweeps and longer m100n1024 sims so taken a while to get results but the peaks were matched on the m25n256 sim and then that $a$ was applied for a run on the m100n1024 sim (had to do this multiple times because $a$ was not getting passed correctly). this finally gave $a = 0.1256$ with a peak around $99.225\mu m$ for the m25n256 sim. However, on the plot shown below in \cref{fig:tempDisfordustfit,fig:fullSEDForDustFit} its visible the overall fit is not great and this value of $a$ also returns a mean dust temperature of $T\approx60K$ so this fit is not ideal. Spoke to Romeel about it and he has suggested to go back use a $\chi^2$ minimisation over the entire far IR curve instead- either using \texttt{scipy} or just trial and error. Additionally, he also suggested to use the m50n512 simulation as this will gave much closer results to m100n1024 but run quicker than m100n1024 and do the dust fitting there then apply to m100n1024.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/extras/image.png}
+    \label{fig:tempDisfordustfit}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/extras/Screenshot from 2026-03-09 15-46-24.png}
+    \label{fig:fullSEDForDustFit}
+\end{figure}
+
+\newday{2026-03-10} Going to now do a sweep on m50n512 from -0.5 to 0.5 (already narrowed down $a$ little bit from peak fitting) with 100 values in between to not have ridiculously long run times. Also now applying a new chi-squared minimisation method; where I have used \texttt{interp1d} from \texttt{scipy} to interpolate between the ebl points since they are sampled at different wavelengths to my Simba background which is on a different grid of points so need interpolation between the points to match $\lambda$. Essentially a function that draws straight lines between every pair of adjacent model points then we read off at exactly the observed wavelength data points by linear interpolation. Then a simple $\chi^2$ calculation is used to minimise for the best fit model.
+
+Results for this fit for the 50Mpc/h box size are shown below:
+
+
+This yields a mean dust temp of 37K which is significantly more reasonable/plausible
+
+Next steps:
+- Overall uncertainties of the light cone and on $a$.
+- report writing
+
+\newday*{2026-03-11}
+
+Meeting with Romeel today:
+
+\begin{itemize}
+\setlength\itemsep{0.5em}
+    \item there is differences in the SED between box sizes, this should not be the case if the light cone code is functioning correctly. optical/radio seem to be shift up for larger volumes this can be explained by 'more galaxies' but shouldn't happen
+    \item for errors romeel said to split light cone into 4 pieces, take value in each quadrant and average those which gives some estimate of variance of the values.
+    \item read the paper that makes an SED for EAGLE simulations to compare and verify methods as the optical does not seem correct and that should be a very good fit to observations. also need to double check for errors in method implementation with units or incorrect formulae.
+    \item for overall report structure what i have is good but methods will be super detailed and results will likely be the main SED, binned plots to see where the SED is dominated, plots of what the light cone looks like to visualise and thats it.
+\end{itemize}
+
+found an issue with light cone code that when i was refactoring it i made some big mistakes with the box cut and was just using a flat box cut instead of the tapered frustum that Chris had applied. So needed to fix this basically all day and then ran the 100Mpc/h box size sweep for far IR which took about roughly 2hrs but then found the best fit $a$ from this sweep for the main run shown below in \cref{fig:finalDustNormalisationFit}:
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/extras/finalDustFit.png}
+    \caption{Final fit value of normalisation parameter in MBB equation with sweep for 100Mpc/h box cut from -0.8 to 0.8 with 100 values. Best a = 0.0807, $\chi^2$ = 1649.07, and reduced $\chi^2 = 38.35$ (dof = 43).}
+    \label{fig:finalDustNormalisationFit}
+\end{figure}
+
+also hoping that the new light cone fixes the box size dependence and issues with optical regime fit.
+
+\newday{2026-03-12} The light cone fix didn't have massive changes in the optical regime so after scanning the optical background code I found an error in my spectral flux density per unit frequency from a source at redshift $z$ I did not write $1+z$ I only had $z$ so that should help improve the results. The new result is shown in \cref{fig:SED_a_dust_0.08_newlc} with the $a = 0.8$ fit from above (this returns $T=56.1K$:
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/extras/SED_a_dust_0.08_newlc.png}
+    \label{fig:SED_a_dust_0.08_newlc}
+\end{figure}
+
+Another issue with the under estimation in the optical regime was using the surviving mass fraction and to instead use the formed mass fraction im now dividing by the fraction of the initially-formed stellar mass that is still alive which is an fsps attribute since the caesar stellar mass is just the surviving mass: 
+\begin{equation*}
+    surviving\_fraction = sp.stellar\_mass
+spec\_Lsun\_Hz *= stellar\_mass / surviving\_fraction.
+\end{equation*}
+
+Overall the fit for far IR does not look good i tried redoing the fit after dropping the anomalous point near the peak, and also the super low one near the start of the far IR range but i've got the same return for a\_dust this is odd because it really looks like the curve is shifted to higher T compared to the red points. also the peak seems higher too. I have rerun the fit to use $a=-0.05$ as the \cite{liangDustTemperaturesHighredshift2019} paper does and the fit is shown in \cref{fig:wjfsd}; it fits the long-wavelength tail quite well but just need to look into if the amplitude is adjustable or is it set by something i get from the simulation?
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{}
+    \caption{Caption}
+    \label{fig:wjfsd}
+\end{figure}
+
+was speaking to Romeel to discuss light cone code changes and I had edited the code to use every snap instead of every other snap as Chris did which meant it started double counting. so the reason it was using only odd/even snaps is because the size of the 100 Mpc/h volume is twice the redshift space path length between snapshots. so that means in Simba if you stack the 151,149,147, etc boxes they will be exactly back to back in redshift space.  (or 150,148,146,etc). But if you use every one then you are potentially doubling the number of sources.
+
+Romeel also suggested i might want another line showing the result using the \_nodust versions of the magnitudes. it seems like we have too much extinction which is lowering our UV a lot.(although this could also be due to AGN which are also bright in the UV).
+
+To Dos:
+
+- add no dust mag line for uv/optical
+- fix light cone code to use every other snap
+- re run 100 Mpc/h parameter sweep and double check $a$ fit but using -0.05 for now
+
+
+fixed lc code to use alternate snaps and was adding no dust magnitude line and fixed 
+
+Found a big issue with optical regime when adding no dust and this has improved results drastically. so has using the correct light cone code.
+
+do i need to include plots for the fitting of $a$ and then how do i propogate uncertainty in $a$ and then pass that into the best fit model when plotting far IR.
+
+why is it optical so less shouldnt depend on box size
+
+for errors:
+split cone into 4 piece, take value in each quadrant and average those which gives some estimate of variance of values for uncertainties
+
+
+big main plot
+discuss that 
+
+then results for binned plots
+visualise the lightcone
+
+
+check over code for why it depends on box size and check units and errors cause optical doesn't look right. read eagle sim paper, visualise lightcones 
+
+read the eagle sim SED paper to double check methods
 
 
 \end{document}

@@ -400,7 +400,7 @@ Worked on code to combine and overplot both farIR and optical SED together on on
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{figures/combined_bg_m25n256.png}
+    \includegraphics[width=0.5\linewidth]{figures/combined/main/combined_bg_m25n256.png}
     \caption{Combined SED through far IR and optical regime. We can see the gap between the two this is dominated by mid IR so mainly AGN and PAHs which has not been considered here.}
     \label{fig:combinedBGm25n256}
 \end{figure}
@@ -426,26 +426,27 @@ Create stellar mass and redshift bins for the optical and IR SED plots to presen
 
 %just need to double check that the lightcone generation is working for the optical case, and then we can run it for all sims and make a nice plot. basically what was the logic for skipping snaps cause initially the 25mpc was too small so using 50mpc volume allows some more room to play with and less restrictive cut in general
 
-\newday{2026-03-01} Worked on implementing some of Romeels feedback in the last meeting. First thing to do was turn $a$ in \cref{eq:equivalentDustTemp} into a passable argument to vary and explore different values of it to match the ebl data from simon driver in \cref{fig:driverSimulationComparison} recreating the same peak and shape. Also 'collecting' per galaxy dust temps so for every valid galaxy we now have $T_{eqv}$ and $z$ to plot the distribution to visualise the output temps from \cref{eq:equivalentDustTemp} so I can verify them, haven't check a specific paper but remember Romeel saying the mean temp should be somewhere between 20K-40K. Below is the first diagnostic plot for trying to find the ideal normalisation factor \footnote{i do have the ebl data now so i could use a monte carlo method to find the ideal value of $a$ that best matches the peak.}. 
+\newday{2026-03-01} Worked on implementing some of Romeels feedback in the last meeting. First thing to do was turn $a$ in \cref{eq:equivalentDustTemp} into a passable argument to vary and explore different values of it to match the ebl data from simon driver in \cref{fig:driverSimulationComparison} recreating/matching the same peak and shape. Also 'collecting' per galaxy dust temps so for every valid galaxy we now have $T_{eqv}$ and $z$ to plot the distribution to visualise the output temps from \cref{eq:equivalentDustTemp} so I can verify them, haven't checked a specific paper but remember Romeel saying the mean temp should be somewhere between 30K-40K. Below is the first diagnostic plot for trying to find the ideal normalisation factor \footnote{i do have the ebl data now so i could use a monte carlo method to find the ideal value of $a$ that best matches the peak.}. 
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{figures/combined_bg_m25n256_diagnostic.png}
+    \includegraphics[width=0.5\linewidth]{figures/combined/diagnostics/combined_bg_m25n256_diagnostic.png}
     \caption{Diagnostic plot for combined fit to test equivalent dust temps and check normalisation.}
     \label{fig:m25n256CombinedTempNormalisationDiagnostic}
 \end{figure}
 
-\noindent In \cref{fig:m25n256CombinedTempNormalisationDiagnostic} I have plotted a range of different $a$ values to see which one works best but Driver ebl data needs to be overplotted to verify. However, the main problem I'm seeing is that the curve is not dipping down as much as we expect it to at all. In \cref{fig:driverSimulationComparison} the curve is almost at zero by $10^4$ but we notice that ours only really starts to dip at that point and does not seem to follow the same curve. Furthermore, looking at the dust histogram in the bottom left across all lightcone galaxies we see that a lower, negative $a$ gives us median dust temps much closer to expectations. Looking at the far IR peak from \cref{fig:driverSimulationComparison} and comparing to the values on the bottom right of \cref{fig:m25n256CombinedTempNormalisationDiagnostic}
+\noindent In \cref{fig:m25n256CombinedTempNormalisationDiagnostic} I have plotted a range of different $a$ values to see which one works best but Driver ebl data needs to be over plotted to verify. However, the main problem I'm seeing is that the far IR curve is not dipping down as much as we expect it to at all. In \cref{fig:driverSimulationComparison} the curve is almost at zero by $10^4$ but ours only really starts to dip at that point and does not seem to follow the same curve. Furthermore, looking at the dust histogram in the bottom left across all lightcone galaxies we see that a lower, negative $a$ gives us median dust temps much closer to expectations so will probably plot more values around that when exploring $a$. Looking at the far IR peak from \cref{fig:driverSimulationComparison} and comparing to the values on the bottom right of \cref{fig:m25n256CombinedTempNormalisationDiagnostic} we can compare specific values too.
 
-Explanation for the temps may be that \cite{liangDustTemperaturesHighredshift2019} quotes the equation for only the specific $z$ range but we have applied it from 0 to 7 potentially introducing the discrepancy. Need to look into doing some more diagnostics and plotting $T_\mathrm{eqv}$ against some other parameters to see whats going on. 
+Explanation for the temps may be that \cite{liangDustTemperaturesHighredshift2019} quotes the equation for only the specific $z$ range but we have applied it from 0 to 7 potentially introducing the discrepancy. Need to look into doing some more diagnostics and plotting $T_\mathrm{eqv}$ against some other parameters to see what's going on. 
 
+\newday{2026-03-02}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RADIO EMISSION
 
-Next step is working on radio emission part of the SED. Needed to do some literature review on how to actually approach do this- Romeel gave me a paper and a rough method to follow but need to iron that out. Outline approach in more detail below
+Next step is working on radio emission part of the SED. Needed to do some literature review on how to actually approach to do this- Romeel gave me a paper \cite{thomasRadioGalaxyPopulation2021} and a rough method to follow but need to iron that out. Outline approach in more detail.
 
 For radio emission:
-Radio emission in many galaxies is heavily dominated by the central supermassive black hole (SMBH), particularly in active galaxies, radio-loud quasars, and elliptical galaxies. There is two sources contributing to radio luminosity non-thermal synchrotron from SNe/SNR and thermal from free-free radition in HIII regions. \cite{thomasRadioGalaxyPopulation2021} models star formation radio emission using \cite{condonRadioEmissionNormal1992} we quote equations 10 and 11,
+Radio emission is primarily from AGN, many galaxies are heavily dominated by the central supermassive black hole (SMBH), particularly in active galaxies, radio-loud quasars, and elliptical galaxies. There is also contribution from star formation (SF) which is not as significantly but two sources contribute: non-thermal synchrotron from SNe/SNR and thermal from free-free radiation in HIII regions. \cite{thomasRadioGalaxyPopulation2021} models star formation radio emission using \cite{condonRadioEmissionNormal1992} we quote equations 10 and 11,
 
 \begin{equation}
 P_{\mathrm{non\text{-}thermal}} (\mathrm{W\,Hz^{-1}})
@@ -461,17 +462,31 @@ P_{\mathrm{thermal}} (\mathrm{W\,Hz^{-1}})
 \times \mathrm{SFR}[M \geq 5\,M_\odot],
 \end{equation}
 
-\noindent which are the contributions to total radio emission from thermal and non-thermal sources so total radio luminosity is $P_\nu = P_\mathrm{thermal} + P_\mathrm{non-thermal}$. $\mathrm{SFR}[M \geq 5\,M_\odot]$ is the rate of mass going into stars heavier than $5\,M_\odot$. We get this factor by computing the IMF mass fraction above $5\,M_\odot$ for the \cite{chabrierGalacticStellarSubstellar2003} IMF (learnt this in galaxies and cosmology literally today) which is:
+\noindent which are the contributions to total radio emission from thermal and non-thermal sources so total SF radio luminosity is $P_\nu = P_\mathrm{thermal} + P_\mathrm{non-thermal}$. $\mathrm{SFR}[M \geq 5\,M_\odot]$ is the rate of mass going into stars heavier than $5\,M_\odot$. We get this factor by computing the IMF mass fraction above $5\,M_\odot$ for the \cite{chabrierGalacticStellarSubstellar2003} IMF (learnt this in galaxies and cosmology literally today) which is:
 
 \begin{equation}
     f_\mathrm{M\ge5} = \frac{\int_{5}^{100}m\xi(m)dm}{\int_{0.1}^{100}m\xi(m)dm}
+    \label{eq:chabrierMassFraction}
 \end{equation}
 
-\noindent so $\mathrm{SFR[M\ge5M_\odot]=f_{M\ge5} \times \mathrm{SFR_total}}$ where I think we can simply get $\mathrm{SFR_total}$ from the \texttt{caesar} catalogues.
+\noindent so $\mathrm{SFR[M\ge5M_\odot]=f_{M\ge5} \times \mathrm{SFR_total}}$ where I think we can simply get $\mathrm{SFR_total}$ from the \texttt{caesar} catalogues. We need to compute the mass fraction of newly formed stellar mass that lies above 5 $M_\odot$ so the IMF in mass form for $m>1M_\odot$ is a simple power law of the form,
 
-Current implementation does only massive star formation which is greater than 5 solar masses, there is no AGN jets modelled yet which \cite{thomasRadioGalaxyPopulation2021} does analyse and discuss in the paper
+\begin{equation}
+    \xi(m) = Bm^{-2.3}
+    \label{eq:chabrierPowerLaw}
+\end{equation}
+\noindent and for $m<1M_\odot$ we have the log normal distribution,
 
-For far IR I still need to spend a little bit more time to figure out deciding on the normalisation factor and what gives best value. Need to add the overplotting of Simon Driver EBL data and maybe implementing an MCMC for calculating $a$ using his code. 
+\begin{equation}
+    \xi(m) = A \frac{1}{m}\exp{-\frac{(\log_{10}m - \log_{10}0.08)^2 }{2 \times 0.69^2}}
+    \label{eq:chabrierLogNormalDistribuition}
+\end{equation}
+
+\noindent $A$ and $B$ are constants chosen to make the function continuous and normalised. Since the SFR is a mass rate we need the mass fraction which is \cref{eq:chabrierMassFraction} and then $\mathrm{SFR}_{>5}=f_{>5} \times \mathrm{SFR_total}$. Need to integrate \cref{eq:chabrierLogNormalDistribuition} numerically it has no nice analytic form, will just use \texttt{scipy.quad}
+
+Current implementation does only massive star formation which is greater than 5 solar masses, there is no AGN jets modelled yet which \cite{thomasRadioGalaxyPopulation2021} does analyse and discuss in the paper.
+
+For far IR I still need to spend a little bit more time to figure out deciding on the normalisation factor and what gives best value. Need to add the overplotting of Simon Driver EBL data.
 
 \newday{2026-03-03} Was looking at the diagnostic plots in \cref{fig:m25n256CombinedTempNormalisationDiagnostic} and the far IR aspect seemed to have the correct shape (ignoring $a$) but mirrored so I looked back over the SED and dust plotting code and found my emissivity term in the MBB had the wrong sign in the exponent $S_\lambda \propto \lambda^1$ meaning emissivity was increasing with $\lambda$ instead of decreasing which I think flipped the shape with wrong peak, now we have $S_\lambda \propto \lambda^{-1}$. The updated and corrected plot is shown below:
 
@@ -486,14 +501,13 @@ For far IR I still need to spend a little bit more time to figure out deciding o
 \newday*{2026-03-04} Show Romeel all results for temp diagnostics and the radio emission combined plot. I still need to add the AGN feedback radio emission which will likely dominated the spectrum but \cite{thomasRadioGalaxyPopulation2021} quotes an equation with no $\nu$ dependence so I am not sure to approach this. The equation is 
 
 \begin{equation}
-    \frac{P_\mathrm{Rad}}{10^{30}{\mathrm{erg}\textrm{s^{-1}}} = \frac{\dot{M_{BH}}}{4\times10^{17}\textrm{g s^{-1}}}
+    \frac{P_\mathrm{Rad}}{10^{30}\mathrm{erg}\text{ }\mathrm{s^{-1}}} = \frac{\dot{M}_{BH}}{4\times10^{17}\mathrm{g}\text{ }\mathrm{s^{-1}}}
     \label{agnRadioEmission}
 \end{equation}
 
 After meeting with Romeel he suggested I could assume a power law of $\nu^{-0.7}$ to add frequency dependence. This is known as the spectral index for AGN. I would just normalise the bolometric relation against 1.4 GHz so I can evaluate the AGN radio emission across a frequency grid.
 
-
-bin it by redshfit to see the contribution from each aspect and just nice plots to have in the report as well
+bin it by redshfit to see the contribution from each aspect and just nice plots to have in the report as well but this is when i have all results and everything is run for the m100n1024 run  
 
 minimise to find best a
 
@@ -506,12 +520,153 @@ methods:
 section on simba, tell what i did, included these physics, describe caesar, go optical far ir and radio and one by one 
 can mention alternative to run full radiative transfer code in part temps from that code are too high 50K should be 30-40K and so a better approach was the mbb and stuff. asking based on sim assuming single mbb what kinda dust temp do we get rather than other way 
 
+bin by redshift to see where the ebl is actually dominated and what contributes the most to our overall spectrum.
+
+Need to find the best value for the normalisation parameter $a$ in the MBB and going to just overplot the simon driver data and then minimise to find the best value of $a$. An MCMC is likely overkill for this and not needed for a one parameter fit such as this.
+
+\newday{2026-03-05} Started on report writing today working on overall struture and formatting of overleaf document. needed to add the structure for writing my references and the style i want them in. started with intro which i used the simon driver paper on ebl (yet to be released) to get some nice references i can implement. while writing i have no clue how to reference the github repo from chris lowell i used. 
+
+overall aim for the structure of the report is intro/background is general intro to science, motivations, why we need to look into this or care, where my research fits into the context of the whole subject and what it adds that wasn't there (we have ebl of the observed universe but not for SIMBA and this allows us to compare SIMBA's ebl to the observations and see the differences and make inferences about galaxy evolution, feedback, large-scale structure of the universe, etc. It will allow us to gauge what SIMBA's universe looks like compared to observations and the differences where it lacks is it fainter in certain parts of the EM spectrum but more dominant in others? what could the reason for this be and improve the hydrosim in general especially with kiara coming up.
+
+methods plan is to go step by step for each individual background and what the method for each one looked like 
+
+\newday{2026-03-06}
+currently the whole process feels inefficient every time i change or want to check something need to run the entire code pipeline again. going to spend some time today to add some handling for saving the different code outputs that are being plotted and some important information such as redshift, per galaxy fluxes, etc. Once this is done I should be able to start working on minimising to find best $a$.
+
+not sure if im aiming to match only the two peaks between the datasets or if I should be aiming to perform the minimisation for both datasets over the entire far IR range. could try both need to consider the final error on $a$ and how to propagate that through as well. 
+
+overall report how do i add/discuss error values on stuff 
+
+--> questions for Romeel in next meeting
+
+Also while making some preliminary plots for find $a$ there seems to be some volume based dependency on the plots when using different sims and they fit the EBL data slightly different. This is shown below:
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/combined/diagnostics/simulated_observed_overplot_m25n256}
+    \caption{The simulated data from SIMBA for the full optical, far IR, radio SED overploted on the observational data from Simon Driver to compare.}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/combined/diagnostics/simulated_observed_overplot_m50n512}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/combined/diagnostics/simulated_observed_overplot_m100n1024}
+\end{figure}
+\noindent we can see that there is differences in the plots, namely for the larger sims the the radio fit seems to be worse and the optical fit seems to get better. Basically for the bigger sims there's more galaxies and so more flux and so the total sum of 'stuff' is much more for the larger sims which is why the plots just slowly move upwards across them as you get more flux and the fits seem to get 'worse'.
+
+\newday{2026-03-07}
+
+so have decided to first minimise just the peak between Driver EBL data and my SED instead of the entire curve for the far IR regime. Was going to initially do this with \texttt{scipy.optimize.minimize} but that requires a continuous function which I don't have and adding in an interpolation step for between the data points is not great and Romeel said to try and avoid, its better to use the original discrete data rather than over engineering. Currently what i have done is a 'far IR sweep' where i've basically run the m25n256 version for a range of $a$ from -1 to 1 with 200 values and these will be tested. initially being done for m25n256 but needs to be redone for m100n1024. the current set up is just matching the peaks of the two datasets.
+
+\newday{2026-03-08} Realised when I was passing $a$ into the MBB function it was getting over written later when passed at a later point and so it wasn't actually getting changed for some plots, going to just double check all these plots. Also problem I am running into, obviously the larger volume sims generate more flux as mentioned above so deciding on $a$ values from m25n256 to run everything seems to be just lower in terms of total fluxes. Going to narrow down the range using m25n256 and then apply that range to a sweep on m100n1024 to find the best possible $a$ value
+
+\newday{2026-03-09} Had to fix admin and run a lot of the sweeps and longer m100n1024 sims so taken a while to get results but the peaks were matched on the m25n256 sim and then that $a$ was applied for a run on the m100n1024 sim (had to do this multiple times because $a$ was not getting passed correctly). this finally gave $a = 0.1256$ with a peak around $99.225\mu m$ for the m25n256 sim. However, on the plot shown below in \cref{fig:tempDisfordustfit,fig:fullSEDForDustFit} its visible the overall fit is not great and this value of $a$ also returns a mean dust temperature of $T\approx60K$ so this fit is not ideal. Spoke to Romeel about it and he has suggested to go back use a $\chi^2$ minimisation over the entire far IR curve instead- either using \texttt{scipy} or just trial and error. Additionally, he also suggested to use the m50n512 simulation as this will gave much closer results to m100n1024 but run quicker than m100n1024 and do the dust fitting there then apply to m100n1024.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/extras/image.png}
+    \label{fig:tempDisfordustfit}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/extras/Screenshot from 2026-03-09 15-46-24.png}
+    \label{fig:fullSEDForDustFit}
+\end{figure}
+
+\newday{2026-03-10} Going to now do a sweep on m50n512 from -0.5 to 0.5 (already narrowed down $a$ little bit from peak fitting) with 100 values in between to not have ridiculously long run times. Also now applying a new chi-squared minimisation method; where I have used \texttt{interp1d} from \texttt{scipy} to interpolate between the ebl points since they are sampled at different wavelengths to my Simba background which is on a different grid of points so need interpolation between the points to match $\lambda$. Essentially a function that draws straight lines between every pair of adjacent model points then we read off at exactly the observed wavelength data points by linear interpolation. Then a simple $\chi^2$ calculation is used to minimise for the best fit model.
+
+Results for this fit for the 50Mpc/h box size are shown below:
 
 
+This yields a mean dust temp of 37K which is significantly more reasonable/plausible
+
+Next steps:
+- Overall uncertainties of the light cone and on $a$.
+- report writing
+
+\newday*{2026-03-11}
+
+Meeting with Romeel today:
+
+\begin{itemize}
+\setlength\itemsep{0.5em}
+    \item there is differences in the SED between box sizes, this should not be the case if the light cone code is functioning correctly. optical/radio seem to be shift up for larger volumes this can be explained by 'more galaxies' but shouldn't happen
+    \item for errors romeel said to split light cone into 4 pieces, take value in each quadrant and average those which gives some estimate of variance of the values.
+    \item read the paper that makes an SED for EAGLE simulations to compare and verify methods as the optical does not seem correct and that should be a very good fit to observations. also need to double check for errors in method implementation with units or incorrect formulae.
+    \item for overall report structure what i have is good but methods will be super detailed and results will likely be the main SED, binned plots to see where the SED is dominated, plots of what the light cone looks like to visualise and thats it.
+\end{itemize}
+
+found an issue with light cone code that when i was refactoring it i made some big mistakes with the box cut and was just using a flat box cut instead of the tapered frustum that Chris had applied. So needed to fix this basically all day and then ran the 100Mpc/h box size sweep for far IR which took about roughly 2hrs but then found the best fit $a$ from this sweep for the main run shown below in \cref{fig:finalDustNormalisationFit}:
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/extras/finalDustFit.png}
+    \caption{Final fit value of normalisation parameter in MBB equation with sweep for 100Mpc/h box cut from -0.8 to 0.8 with 100 values. Best a = 0.0807, $\chi^2$ = 1649.07, and reduced $\chi^2 = 38.35$ (dof = 43).}
+    \label{fig:finalDustNormalisationFit}
+\end{figure}
+
+also hoping that the new light cone fixes the box size dependence and issues with optical regime fit.
+
+\newday{2026-03-12} The light cone fix didn't have massive changes in the optical regime so after scanning the optical background code I found an error in my spectral flux density per unit frequency from a source at redshift $z$ I did not write $1+z$ I only had $z$ so that should help improve the results. The new result is shown in \cref{fig:SED_a_dust_0.08_newlc} with the $a = 0.8$ fit from above (this returns $T=56.1K$:
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/extras/SED_a_dust_0.08_newlc.png}
+    \label{fig:SED_a_dust_0.08_newlc}
+\end{figure}
+
+Another issue with the under estimation in the optical regime was using the surviving mass fraction and to instead use the formed mass fraction im now dividing by the fraction of the initially-formed stellar mass that is still alive which is an fsps attribute since the caesar stellar mass is just the surviving mass: 
+\begin{equation*}
+    surviving\_fraction = sp.stellar\_mass
+spec\_Lsun\_Hz *= stellar\_mass / surviving\_fraction.
+\end{equation*}
+
+Overall the fit for far IR does not look good i tried redoing the fit after dropping the anomalous point near the peak, and also the super low one near the start of the far IR range but i've got the same return for a\_dust this is odd because it really looks like the curve is shifted to higher T compared to the red points. also the peak seems higher too. I have rerun the fit to use $a=-0.05$ as the \cite{liangDustTemperaturesHighredshift2019} paper does and the fit is shown in \cref{fig:wjfsd}; it fits the long-wavelength tail quite well but just need to look into if the amplitude is adjustable or is it set by something i get from the simulation?
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{}
+    \caption{Caption}
+    \label{fig:wjfsd}
+\end{figure}
+
+was speaking to Romeel to discuss light cone code changes and I had edited the code to use every snap instead of every other snap as Chris did which meant it started double counting. so the reason it was using only odd/even snaps is because the size of the 100 Mpc/h volume is twice the redshift space path length between snapshots. so that means in Simba if you stack the 151,149,147, etc boxes they will be exactly back to back in redshift space.  (or 150,148,146,etc). But if you use every one then you are potentially doubling the number of sources.
+
+Romeel also suggested i might want another line showing the result using the \_nodust versions of the magnitudes. it seems like we have too much extinction which is lowering our UV a lot.(although this could also be due to AGN which are also bright in the UV).
+
+To Dos:
+
+- add no dust mag line for uv/optical
+- fix light cone code to use every other snap
+- re run 100 Mpc/h parameter sweep and double check $a$ fit but using -0.05 for now
 
 
+fixed lc code to use alternate snaps and was adding no dust magnitude line and fixed 
+
+Found a big issue with optical regime when adding no dust and this has improved results drastically. so has using the correct light cone code.
+
+do i need to include plots for the fitting of $a$ and then how do i propogate uncertainty in $a$ and then pass that into the best fit model when plotting far IR.
+
+why is it optical so less shouldnt depend on box size
+
+for errors:
+split cone into 4 piece, take value in each quadrant and average those which gives some estimate of variance of values for uncertainties
 
 
+big main plot
+discuss that 
+
+then results for binned plots
+visualise the lightcone
+
+
+check over code for why it depends on box size and check units and errors cause optical doesn't look right. read eagle sim paper, visualise lightcones 
+
+read the eagle sim SED paper to double check methods
 
 
 \end{document}

@@ -1,12 +1,12 @@
 """
-Combined optical + far-IR cosmic background with dust-temperature diagnostics.
+Far-IR cosmic background with dust-temperature diagnostics.
 
 Usage:
     # Single run (default a = -0.05):
-    python scripts/run_combined.py --sim m25n256
+    python scripts/run_combined_diagnostic.py --sim m25n256
 
-    # Sweep several values of 'a' to find the best peak position:
-    python scripts/run_combined.py --sim m25n256 --a_dust -0.10 -0.05 0.00 0.05 0.10
+    # Sweep several values of 'a' to compare far-IR curves:
+    python scripts/run_combined_diagnostic.py --sim m25n256 --a_dust -0.10 -0.05 0.00 0.05 0.10
 """
 import argparse
 import os
@@ -18,19 +18,16 @@ os.environ.setdefault('SPS_HOME', '/home/spujni/fsps')
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import astropy.units as u
-from astropy.constants import c as c_light
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.config import load_config
-from src.backgrounds.optical import lightcone_optical_background
 from src.backgrounds.farIR import lightcone_farIR_background
 
 
 # ── unit helpers ──────────────────────────────────────────────────
-CGS_TO_NW_M2 = 1e6          # 1 erg/s/cm² → 1e6 nW/m²
-FLOOR        = 1e-6          # nW/m²/sr  – plotting noise floor
+CGS_TO_NW_M2 = 1e6   # 1 erg/s/cm² → 1e6 nW/m²
+FLOOR = 1e-6         # nW/m²/sr  – plotting noise floor
 
 
 def _to_nW(nuInu):
@@ -41,8 +38,8 @@ def _to_nW(nuInu):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Combined optical + far-IR cosmic background "
-                    "with dust-temperature diagnostics")
+        description="Far-IR cosmic background with dust-temperature diagnostics"
+    )
     parser.add_argument("--sim", default="m25n256",
                         choices=["m25n256", "m50n512", "m100n1024"])
     parser.add_argument("--area", type=float, default=1.0)
@@ -51,60 +48,49 @@ def main():
     parser.add_argument(
         "--a_dust", type=float, nargs="+", default=[-0.05],
         help="One or more values of the normalisation parameter 'a' "
-             "in the Liang+19 T_eqv relation.  "
-             "Pass several values to overlay far-IR curves for comparison.")
+             "in the Liang+19 T_eqv relation."
+    )
     args = parser.parse_args()
 
     cfg = load_config(args.sim)
     print(f"Running on {cfg.name} (box={cfg.box_size_mpc_h} Mpc/h)\n")
 
-    # ── Optical / near-IR (computed once) ─────────────────────────
-    print("=== Optical/NIR background ===")
-    lam_opt, I_nu_opt = lightcone_optical_background(
-        cfg, area_deg2=args.area, z_min=args.z_min, z_max=args.z_max
-    )
-    nu_opt      = (c_light / (lam_opt * u.AA)).to_value(u.Hz)
-    nuInu_opt   = _to_nW(nu_opt * I_nu_opt)
-    lam_opt_um  = lam_opt * 1e-4                           # Å → µm
-
     # ── Far-IR for each value of 'a' ─────────────────────────────
-    fir_results = {}          # a_val → (lam_µm, nuInu_nW)
-    dust_temp_results = {}    # a_val → (temps_array, z_array)
+    fir_results = {}          # a_val -> (lam_um, nuInu_nW)
+    dust_temp_results = {}    # a_val -> (temps_array, z_array)
 
     for a_val in args.a_dust:
         tag = f"a = {a_val:+.2f}"
-        print(f"\n=== Far-IR background ({tag}) ===")
+        print(f"=== Far-IR background ({tag}) ===")
 
         lam_fir, I_lam_fir, temps, zs = lightcone_farIR_background(
             cfg, area_deg2=args.area,
             z_min=args.z_min, z_max=args.z_max,
             a_dust=a_val, return_dust_temps=True
         )
-        nuInu_fir = _to_nW(lam_fir * I_lam_fir)
-        lam_fir_um = lam_fir * 1e-4
+        nuInu_fir = _to_nW(lam_fir * I_lam_fir)  # λI_λ = νI_ν
+        lam_fir_um = lam_fir * 1e-4              # Å -> µm
 
-        fir_results[a_val]       = (lam_fir_um, nuInu_fir)
+        fir_results[a_val] = (lam_fir_um, nuInu_fir)
         dust_temp_results[a_val] = (temps, zs)
+        print()
 
     # ── Figure layout: 2 rows ────────────────────────────────────
-    #   top  : full-width SED  (optical + far-IR overlays)
+    #   top  : full-width far-IR SED overlays
     #   bot-L: dust temperature histogram
     #   bot-R: peak wavelength vs 'a'
     fig = plt.figure(figsize=(14, 10))
-    gs  = gridspec.GridSpec(2, 2, height_ratios=[1.4, 1],
-                            hspace=0.30, wspace=0.30)
-    ax_sed   = fig.add_subplot(gs[0, :])
-    ax_hist  = fig.add_subplot(gs[1, 0])
-    ax_peak  = fig.add_subplot(gs[1, 1])
-
-    # ── Top panel: SED ────────────────────────────────────────────
-    ax_sed.loglog(lam_opt_um, nuInu_opt, lw=2, color='steelblue',
-                  label='Optical / NIR (stellar)')
+    gs = gridspec.GridSpec(2, 2, height_ratios=[1.4, 1],
+                           hspace=0.30, wspace=0.30)
+    ax_sed = fig.add_subplot(gs[0, :])
+    ax_hist = fig.add_subplot(gs[1, 0])
+    ax_peak = fig.add_subplot(gs[1, 1])
 
     cmap = plt.cm.autumn_r
     a_vals = sorted(fir_results.keys())
     colours = [cmap(i / max(len(a_vals) - 1, 1)) for i in range(len(a_vals))]
 
+    # ── Top panel: Far-IR SED ────────────────────────────────────
     for a_val, col in zip(a_vals, colours):
         lam_um, nuInu = fir_results[a_val]
         ax_sed.loglog(lam_um, nuInu, lw=2, color=col,
@@ -112,11 +98,11 @@ def main():
 
     ax_sed.set_xlabel(r'$\lambda_{\rm obs}$ [$\mu$m]', fontsize=13)
     ax_sed.set_ylabel(r'$\nu\, I_\nu$ [nW m$^{-2}$ sr$^{-1}$]', fontsize=13)
-    ax_sed.set_title(f'Cosmic background — {cfg.name}  '
+    ax_sed.set_title(f'Far-IR background — {cfg.name}  '
                      f'($z = {args.z_min}$–${args.z_max}$)', fontsize=14)
     ax_sed.legend(fontsize=10, ncol=2)
     ax_sed.grid(True, which='both', ls=':', alpha=0.4)
-    ax_sed.set_xlim(0.1, 1e4)   # extended to 10^4 µm = 10 mm
+    ax_sed.set_xlim(8, 1e4)  # ~8 µm to 10 mm
 
     # ── Bottom-left: dust temperature distribution ────────────────
     for a_val, col in zip(a_vals, colours):
@@ -150,10 +136,11 @@ def main():
     ax_peak.grid(True, ls=':', alpha=0.4)
 
     # ── Save ──────────────────────────────────────────────────────
-    out = Path("figures/combined/diagnostics") / f"combined_bg_{cfg.name}_diagnostic.png"
+    out = Path("figures/farIR") / f"farIR_bg_{cfg.name}_diagnostic.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=200, bbox_inches='tight')
-    print(f"\nSaved → {out}")
+    print(f"Saved -> {out}")
+
 
 if __name__ == "__main__":
     main()

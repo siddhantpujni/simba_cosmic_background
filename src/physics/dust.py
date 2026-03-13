@@ -1,8 +1,7 @@
 import numpy as np
 import h5py
 
-
-def equivalent_dust_temperature(hdf5_path, redshift, a=-0.05):
+def equivalent_dust_temperature(hdf5_path, redshift, a=0.1256): #a=0.1256 is best
     """
     Compute equivalent dust temperature T_eqv for all galaxies.
 

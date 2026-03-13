@@ -58,7 +58,7 @@ def summed_mbb_single(cfg, snap, beta=2.0, n_points=500, a_dust=-0.05):
     return lam, total_sed
 
 
-def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
+def build_lightcone(cfg, area_deg2=0.5, z_min=0.0, z_max=7.0):
     """Generate or load a cached lightcone."""
     LIGHTCONE_DIR.mkdir(parents=True, exist_ok=True)
     lc_path = LIGHTCONE_DIR / f"lc_{cfg.name}_a{area_deg2}_z{z_min}-{z_max}.h5"
@@ -71,8 +71,8 @@ def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
     return lc_path
 
 
-def lightcone_farIR_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
-                                beta=2.0, n_points=500, a_dust=-0.05,
+def lightcone_farIR_background(cfg, area_deg2=0.5, z_min=0.0, z_max=7.0,
+                                beta=2.0, n_points=500, a_dust=-0.0455,
                                 return_dust_temps=False):
     """
     Compute the far-IR cosmic background intensity by summing

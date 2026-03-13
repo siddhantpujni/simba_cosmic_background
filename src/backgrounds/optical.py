@@ -122,19 +122,6 @@ def get_stellar_mass_bins(stellar_mass, n_bins=5):
     bins = np.logspace(log_mass.min(), log_mass.max(), n_bins + 1)
     return np.digitize(stellar_mass, bins) - 1, bins
 
-def _redshift_for_snap(cfg, snap):
-    """Get redshift for a snapshot from HDF5 attrs or Caesar."""
-    hdf5 = cfg.hdf5_path(snap)
-    if hdf5.exists():
-        with h5py.File(hdf5, "r") as f:
-            if "redshift" in f.attrs:
-                return float(f.attrs["redshift"])
-    caesar_f = cfg.caesar_path(snap)
-    if caesar_f.exists():
-        obj = caesar.load(str(caesar_f))
-        return get_redshift(obj)
-    raise FileNotFoundError(f"Cannot get redshift for snap {snap}")
-
 def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
     """Generate or load a cached lightcone."""
     LIGHTCONE_DIR.mkdir(parents=True, exist_ok=True)
@@ -146,17 +133,16 @@ def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
     return lc_path
 
 
-def lightcone_optical_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
-                                  n_points=500):
+def lightcone_optical_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
     """
-    Compute the optical/near-IR cosmic background intensity by
-    generating FSPS spectra for each lightcone galaxy, redshifting,
-    and summing.
+    Compute the optical/near-IR cosmic background intensity using
+    Caesar's pre-computed apparent magnitudes (with and without dust).
 
     Returns
     -------
-    lam_obs   : array (Angstrom)
-    intensity : array (erg/s/cm^2/Hz/sr)
+    lam_obs          : array (Angstrom) — filter effective wavelengths
+    intensity        : array (erg/s/cm^2/Hz/sr)  — with dust
+    intensity_nodust : array (erg/s/cm^2/Hz/sr)  — no dust
     """
     lc_path = build_lightcone(cfg, area_deg2, z_min, z_max)
 
@@ -165,20 +151,51 @@ def lightcone_optical_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
         snap_arr = lc["snap"][:]
         gal_idx = lc["galaxy_index"][:]
 
-    # Common observed wavelength grid: 1000 Å – 50 000 Å
-    lam_obs = np.logspace(np.log10(1000), np.log10(50000), n_points)
     omega_sr = area_deg2 * (np.pi / 180.0) ** 2
 
-    total_flux = np.zeros_like(lam_obs)
-
-    # Initialise FSPS stellar population (once)
-    sp = fsps.StellarPopulation(zcontinuous=1, sfh=0, logzsol=0.0,
-                                dust_type=2)
-
-    # Cache Caesar objects per snapshot
-    caesar_cache = {}
-
+    # We'll accumulate flux at each filter's effective wavelength
+    # First pass: figure out which filters are available
     unique_snaps = np.unique(snap_arr)
+    
+    # Get filter list from first valid snapshot
+    filter_info = {}  # filter_name -> (nu_Hz, lam_AA)
+    for snap in unique_snaps:
+        snap = int(snap)
+        if snap in SKIP_SNAPS:
+            continue
+        hdf5 = cfg.hdf5_path(snap)
+        if not hdf5.exists():
+            continue
+        with h5py.File(hdf5, "r") as f:
+            if "galaxy_data/dicts" not in f:
+                continue
+            for k in f["galaxy_data/dicts"].keys():
+                if k.startswith("appmag."):
+                    filt = k.split("appmag.")[-1]
+                    if filt not in filter_info:
+                        try:
+                            fsps_filt = fsps.get_filter(filt)
+                            lam_eff = fsps_filt.lambda_eff  # Angstrom
+                            nu = (c / (lam_eff * u.AA)).to_value(u.Hz)
+                            filter_info[filt] = (nu, lam_eff)
+                        except:
+                            pass
+        break  # only need first snapshot to get filter list
+
+    if not filter_info:
+        raise ValueError("No valid filters found in Caesar catalogues")
+
+    # Sort by frequency
+    filters_sorted = sorted(filter_info.keys(), key=lambda f: filter_info[f][0])
+    nu_arr = np.array([filter_info[f][0] for f in filters_sorted])
+    lam_arr = np.array([filter_info[f][1] for f in filters_sorted])
+
+    total_fnu = np.zeros(len(filters_sorted))
+    total_fnu_nodust = np.zeros(len(filters_sorted))
+
+    # Cache HDF5 data per snapshot
+    cache = {}
+
     print(f"Processing {len(gal_z)} galaxies across "
           f"{len(unique_snaps)} snapshots …")
 
@@ -188,58 +205,56 @@ def lightcone_optical_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
             continue
 
         smask = snap_arr == snap
-        cat_path = cfg.caesar_path(snap)
-        if not cat_path.exists():
-            print(f"  WARN: missing {cat_path}, skipping snap {snap}")
+        hdf5 = cfg.hdf5_path(snap)
+        if not hdf5.exists():
+            print(f"  WARN: missing {hdf5}, skipping snap {snap}")
             continue
 
-        if snap not in caesar_cache:
-            caesar_cache[snap] = caesar.load(str(cat_path))
-        obj = caesar_cache[snap]
+        if snap not in cache:
+            with h5py.File(hdf5, "r") as f:
+                mags = {}
+                mags_nodust = {}
+                for filt in filters_sorted:
+                    key = f"galaxy_data/dicts/appmag.{filt}"
+                    key_nd = f"galaxy_data/dicts/appmag_nodust.{filt}"
+                    if key in f:
+                        mags[filt] = f[key][:]
+                    if key_nd in f:
+                        mags_nodust[filt] = f[key_nd][:]
+            cache[snap] = (mags, mags_nodust)
 
-        n_gals = len(obj.galaxies)
-        print(f"  snap {snap}: {smask.sum()} lightcone galaxies "
-              f"(catalogue has {n_gals})")
+        mags, mags_nodust = cache[snap]
+        n_gals = len(mags[filters_sorted[0]]) if filters_sorted[0] in mags else 0
 
-        for gi, gz in zip(gal_idx[smask], gal_z[smask]):
+        print(f"  snap {snap}: {smask.sum()} lightcone galaxies")
+
+        for gi in gal_idx[smask]:
             gi = int(gi)
             if gi >= n_gals:
                 continue
 
-            gal = obj.galaxies[gi]
-            stellar_mass = gal.masses['stellar'].value
-            metallicity = gal.metallicities['stellar']
+            for i, filt in enumerate(filters_sorted):
+                # With dust
+                if filt in mags:
+                    mag = mags[filt][gi]
+                    if np.isfinite(mag):
+                        fnu_jy = 3631.0 * 10 ** (-mag / 2.5)
+                        total_fnu[i] += fnu_jy
 
-            if stellar_mass <= 0 or metallicity <= 0:
-                continue
+                # Without dust
+                if filt in mags_nodust:
+                    mag_nd = mags_nodust[filt][gi]
+                    if np.isfinite(mag_nd):
+                        fnu_jy_nd = 3631.0 * 10 ** (-mag_nd / 2.5)
+                        total_fnu_nodust[i] += fnu_jy_nd
 
-            age_gyr = cfg.cosmology.age(gz).value
-            if age_gyr <= 0:
-                continue
+    # Convert Jy to cgs: 1 Jy = 1e-23 erg/s/cm²/Hz
+    total_fnu_cgs = total_fnu * 1e-23
+    total_fnu_nodust_cgs = total_fnu_nodust * 1e-23
 
-            # Set FSPS parameters
-            sp.params['logzsol'] = np.log10(metallicity / 0.0142)
-            sp.params['tage'] = age_gyr
+    # Divide by solid angle to get intensity
+    intensity = total_fnu_cgs / omega_sr
+    intensity_nodust = total_fnu_nodust_cgs / omega_sr
 
-            wave, spec_Lsun_Hz = sp.get_spectrum(tage=age_gyr)
-
-            # Scale by stellar mass (FSPS normalises to 1 Msun)
-            spec_Lsun_Hz *= stellar_mass
-
-            # Convert Lsun/Hz → erg/s/cm²/Hz at observer
-            d_L = cfg.cosmology.luminosity_distance(gz).to(u.cm).value
-            spec_flux = spec_Lsun_Hz * LSUN_ERG_S / (4.0 * np.pi * d_L ** 2)
-
-            # Redshift the wavelength grid
-            wave_obs = wave * (1.0 + gz)
-
-            # Interpolate onto common grid and accumulate
-            flux_interp = np.interp(lam_obs, wave_obs, spec_flux,
-                                    left=0.0, right=0.0)
-            if np.all(np.isfinite(flux_interp)):
-                total_flux += flux_interp
-
-    # Convert summed flux to surface brightness
-    intensity = total_flux / omega_sr
     print("Done.")
-    return lam_obs, intensity
+    return lam_arr, intensity, intensity_nodust

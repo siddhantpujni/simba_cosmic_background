@@ -61,6 +61,7 @@ def compute_backgrounds(cfg, args, a_dust=-0.017341):
     nuInu_opt_nW        = nuInu_opt * cgs_to_nWm2
     nuInu_opt_nodust_nW = nuInu_opt_nodust * cgs_to_nWm2
     nuInu_fir_nW        = nuInu_fir * cgs_to_nWm2
+    nuInu_radio_nW      = nuInu_radio * cgs_to_nWm2
 
     lam_opt_um = lam_opt * 1e-4
     lam_fir_um = lam_fir * 1e-4
@@ -71,7 +72,7 @@ def compute_backgrounds(cfg, args, a_dust=-0.017341):
         lam_opt, I_nu_opt, nuInu_opt_nW,
         I_nu_opt_nodust, nuInu_opt_nodust_nW,
         lam_fir, I_lam_fir, nuInu_fir_nW,
-        nu_radio, I_nu_radio, lam_radio_um, nuInu_radio,
+        nu_radio, I_nu_radio, lam_radio_um, nuInu_radio_nW,
         dust_temps=dust_temps, dust_redshifts=dust_zs,
         a_dust=a_dust,
     )
@@ -80,7 +81,7 @@ def compute_backgrounds(cfg, args, a_dust=-0.017341):
         "optical": {"lam_um": lam_opt_um, "nuInu_nW": nuInu_opt_nW,
                      "nuInu_nodust_nW": nuInu_opt_nodust_nW},
         "farIR":   {"lam_um": lam_fir_um, "nuInu_nW": nuInu_fir_nW},
-        "radio":   {"lam_um": lam_radio_um, "nuInu": nuInu_radio},
+        "radio":   {"lam_um": lam_radio_um, "nuInu_nW": nuInu_radio_nW},
     }
 
 def load_cached(cfg, args):
@@ -95,7 +96,7 @@ def load_cached(cfg, args):
                      "nuInu_nW": data["optical"]["nuInu_nW"],
                      "nuInu_nodust_nW": data["optical"].get("nuInu_nodust_nW")},
         "farIR":   {"lam_um": lam_fir_um, "nuInu_nW": data["farIR"]["nuInu_nW"]},
-        "radio":   {"lam_um": data["radio"]["lam_um"], "nuInu": data["radio"]["nuInu"]},
+        "radio":   {"lam_um": data["radio"]["lam_um"], "nuInu_nW": data["radio"]["nuInu_nW"]},
     }
 
 
@@ -108,7 +109,7 @@ def plot_combined(cfg, args, results):
     lam_fir_um          = results["farIR"]["lam_um"]
     nuInu_fir_nW        = results["farIR"]["nuInu_nW"]
     lam_radio_um        = results["radio"]["lam_um"]
-    nuInu_radio         = results["radio"]["nuInu"]
+    nuInu_radio_nW      = results["radio"]["nuInu_nW"]
 
     floor = 1e-6
     opt_plot = np.where(nuInu_opt_nW > floor, nuInu_opt_nW, np.nan)
@@ -127,7 +128,7 @@ def plot_combined(cfg, args, results):
 
     ax.loglog(lam_fir_um, fir_plot, lw=2, color='firebrick',
               label='Far-IR (dust MBB)')
-    ax.loglog(lam_radio_um, nuInu_radio, lw=2, color='forestgreen',
+    ax.loglog(lam_radio_um, nuInu_radio_nW, lw=2, color='forestgreen',
               label='Radio (SF + AGN)')
 
     # Mark crossover if it exists within overlapping range

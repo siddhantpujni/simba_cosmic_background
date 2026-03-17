@@ -43,7 +43,7 @@ def save_background_results(
     # Far-IR
     lam_fir, I_lam_fir, nuInu_fir_nW,
     # Radio
-    nu_radio, I_nu_radio, lam_radio_um, nuInu_radio,
+    nu_radio, I_nu_radio, lam_radio_um, nuInu_radio_nW,
     # Optional diagnostics
     dust_temps=None, dust_redshifts=None,
     # Physics parameters
@@ -51,7 +51,7 @@ def save_background_results(
 ):
     """
     Save all computed background spectra to HDF5 for later analysis.
-    
+
     Parameters
     ----------
     cfg : SimConfig
@@ -62,8 +62,8 @@ def save_background_results(
         Optical/NIR wavelength (AA), intensity (erg/s/cm²/Hz/sr), νIν (nW/m²/sr).
     lam_fir, I_lam_fir, nuInu_fir_nW : arrays
         Far-IR wavelength (AA), intensity (erg/s/cm²/sr/AA), νIν (nW/m²/sr).
-    nu_radio, I_nu_radio, lam_radio_um, nuInu_radio : arrays
-        Radio frequency (Hz), intensity, wavelength (µm), νIν (erg/s/cm²/sr).
+    nu_radio, I_nu_radio, lam_radio_um, nuInu_radio_nW : arrays
+        Radio frequency (Hz), intensity, wavelength (µm), νIν (nW/m²/sr).
     dust_temps, dust_redshifts : arrays, optional
         Per-galaxy dust temperatures and redshifts for diagnostics.
     a_dust, beta : float
@@ -123,29 +123,29 @@ def save_background_results(
 def load_background_results(cfg_name, area, z_min, z_max):
     """
     Load previously computed background spectra.
-    
+
     Parameters
     ----------
     cfg_name : str
         Simulation name (e.g., "m25n256").
     area, z_min, z_max : float
         Lightcone parameters.
-    
+
     Returns
     -------
     dict : nested dictionary with all saved data
     """
     fname = f"bg_{cfg_name}_a{area}_z{z_min}-{z_max}.h5"
     path = RESULTS_DIR / fname
-    
+
     if not path.exists():
         raise FileNotFoundError(f"No cached results at {path}")
-    
+
     data = {}
     with h5py.File(path, "r") as f:
         # Metadata
         data["metadata"] = dict(f["metadata"].attrs)
-        
+
         # Optical
         data["optical"] = {
             "lam_AA": f["optical/lam_AA"][:],
@@ -154,29 +154,39 @@ def load_background_results(cfg_name, area, z_min, z_max):
             "I_nu_nodust": f["optical/I_nu_nodust"][:],
             "nuInu_nodust_nW": f["optical/nuInu_nodust_nW"][:],
         }
-        
+
         # Far-IR
         data["farIR"] = {
             "lam_AA": f["farIR/lam_AA"][:],
             "I_lam": f["farIR/I_lam"][:],
             "nuInu_nW": f["farIR/nuInu_nW"][:]
         }
-        
-        # Radio
+
+        # Radio (handle old cache files that used "nuInu" instead of "nuInu_nW")
+        radio_grp = f["radio"]
+        if "nuInu_nW" in radio_grp:
+            radio_nuInu = radio_grp["nuInu_nW"][:]
+        elif "nuInu" in radio_grp:
+            radio_nuInu = radio_grp["nuInu"][:] * 1e6   # erg/s/cm²/sr → nW/m²/sr
+        else:
+            # Recompute from raw I_nu if neither key exists
+            nu_hz = radio_grp["nu_Hz"][:]
+            I_nu  = radio_grp["I_nu"][:]
+            radio_nuInu = nu_hz * I_nu * 1e6             # erg/s/cm²/sr → nW/m²/sr
         data["radio"] = {
-            "nu_Hz": f["radio/nu_Hz"][:],
-            "I_nu": f["radio/I_nu"][:],
-            "lam_um": f["radio/lam_um"][:],
-            "nuInu": f["radio/nuInu"][:]
+            "nu_Hz": radio_grp["nu_Hz"][:],
+            "I_nu": radio_grp["I_nu"][:],
+            "lam_um": radio_grp["lam_um"][:],
+            "nuInu_nW": radio_nuInu
         }
-        
+
         # Diagnostics if present
         if "diagnostics" in f:
             data["diagnostics"] = {
                 "dust_temps": f["diagnostics/dust_temps"][:],
                 "dust_redshifts": f["diagnostics/dust_redshifts"][:]
             }
-    
+
     print(f"Loaded results from {path}")
     return data
 

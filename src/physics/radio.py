@@ -86,11 +86,13 @@ def radio_sed_sf(sfr_total, nu_ghz_array, f_imf=None):
 
 def agn_radio_luminosity(mdot_bh, nu_ghz=1.4):
     """
-    AGN radio luminosity from black hole accretion with spectral index.
+    AGN radio spectral luminosity from black hole accretion.
 
-    P_Rad / 1e30 erg s^-1 = Mdot_BH / 4e17 g s^-1
+    P_Rad / 1e30 erg s^-1 = (Mdot_BH / 4e17 g s^-1)^(17/12)
 
-    scaled by a power-law SED  (nu / 1.4 GHz)^{-0.7}.
+    where P_Rad ~ nu * P_nu  (bolometric radio power at 1.4 GHz).
+    We normalise at 1.4 GHz:  P_nu(1.4 GHz) = P_Rad / nu_ref,
+    then apply a power-law SED  (nu / 1.4 GHz)^{-0.7}.
 
     Parameters
     ----------
@@ -101,13 +103,16 @@ def agn_radio_luminosity(mdot_bh, nu_ghz=1.4):
 
     Returns
     -------
-    P_rad : float or array
-        Radio luminosity in erg s^-1.
+    P_nu : float or array
+        Spectral luminosity in erg s^-1 Hz^-1.
     """
-    MSUN_PER_YR_TO_G_PER_S = 6.304e25          # 1 M_sun/yr → g/s
+    MSUN_PER_YR_TO_G_PER_S = 6.304e25
     mdot_cgs = np.asarray(mdot_bh) * MSUN_PER_YR_TO_G_PER_S
     nu = np.asarray(nu_ghz, dtype=float)
 
-    P_ref = (mdot_cgs / 4e17) * 1e30           # erg s^-1 at 1.4 GHz
+    nu_ref_hz = 1.4e9                                          # 1.4 GHz in Hz
 
-    return P_ref * (nu / 1.4) ** (-0.7)         # erg s^-1
+    P_rad = (mdot_cgs / 4e17) ** (17.0 / 12.0) * 1e30         # erg s^-1 (bolometric)
+    P_nu_ref = P_rad / nu_ref_hz                               # erg s^-1 Hz^-1 at 1.4 GHz
+
+    return P_nu_ref * (nu / 1.4) ** (-0.7)                     # erg s^-1 Hz^-1

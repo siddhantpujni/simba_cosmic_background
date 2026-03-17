@@ -64,6 +64,8 @@ We present ground-based transit photometry of the hot Jupiter WASP-135b obtained
 
 \section{Introduction}
 
+There are two main types of simulations seen in modern cosmology; Hydrodynamical Simulations or Semi-Analytic Models (SAMs). The two can be differentiated by their level of complexity and depth by which they explore galaxy evolution and feedback \parencite{neisteinHydrodynamicalSimulationsSemianalytic2012}.  more detail on hydro sims here we focus on hydro and blah blah blah
+
 Hydrodynamical simulations serve as theoretical laboratories enabling controlled exploration of the cosmos through modelling of galaxy evolution and feedback mechanisms. As observational capabilities sharpen through JWST, Euclid, and DESI, simulations play an increasingly critical role in interpreting results to refine our underlying understanding of astrophysics.  
 Olbers paradox questions why the night sky is dark given an infinite universe where every line of sight should be covered by the light of some distant star. In fact, the night sky is not dark and this is indeed true and the night sky is brightly lit but just not in the optical regime but the entire electromagnetic spectrum. As light travels in this infinite universe from these distant stars it undergoes a phenomenon known as cosmological redshift, a stretching of the photons wavelength due to the expansion of the universe. As a result, the night sky is completely lit up with various wavelengths of the electromagnetic spectrum, or light, and not all of it reaches us in the optical regime. Known as the Cosmic Spectrum of the universe or the extragalactic background light (EBL), it has been measured for the observable universe *CITATIONS HERE*. However, here we do the same for the state-of-the-art cosmological hydrodynamic simulation SIMBA \cite{daveSimbaCosmologicalSimulations2019}.
 
@@ -75,27 +77,48 @@ general physics background thats needed
 
 anything above redshift z=7 is useless and way too dim and doesn't account for anything so is typically ignored even from the data as its too early in the universe for anything to either have formed or have any valuable additions. this is supported by the redshift binned data which shows the absolutely minimal addition of late redshift files 
 
+\section{Methodologies}
+
+\subsection{The \texttt{Simba} Simulations}
+
+The \textsc{simba} simulations \parencite{daveSimbaCosmologicalSimulations2019} are hydrodynamical state-of-the-art simulations of galaxy formation, built on \textsc{gizmo} \parencite{hopkinsNewClassAccurate2015} using its meshless finite mass (MFM) method. Building on the previous generation \textsc{mufasa} simulations with improvements to the subgrid prescriptions for both star formation and active galactic nucleus (AGN) feedback via modified code from \textsc{gadget-3} \parencite{springelCosmologicalSimulationCode2005} it evolves dark matter and baryonic elements together including gravity and pressure forces.
+
+\textsc{simba} approaches star formation based on molecular gas fraction following the $H_2$ Schmidt-Kennicutt relation with a fixed star formation efficiency $\epsilon_\star=0.02$ \parencite{robertc.kennicuttGlobalSchmidtLaw1998}. The star formation rate (SFR) is based on the $H2$ fraction which is computed via the \cite{krumholzCOMPARISONMETHODSDETERMINING2011} model. Stellar feedback is present via metal loaded winds that enrich the ISM for future star formation.
 
 
-For computational astrophysics, discuss:
-\begin{itemize}
-    \item Existing computational methods and their limitations
-    \item Your novel approach or improvements
-    \item Expected outcomes and scientific implications
-\end{itemize}
+%%%%%%
+As the next generation of the MUFASA simulations (Dave,´ Thompson \& Hopkins 2016), SIMBA builds on the work of its predecessor
+by incorporating a unique two-mode accretion model for black holes
+and implementing variousimprovements to the subgrid prescriptions
+for star formation and feedback from active galactic nuclei. For cold
+gas (T < 105 K), black hole growth is implemented via a torquelimited accretion model (Hopkins \& Quataert 2011; Angles-Alc ´ azar ´
+et al. 2017), where instabilities in the cold gaseous disc give rise to
+gravitational torques which drive gas inflows, while Bondi accretion
+(Bondi 1952) is adopted for hot gas (T > 105 K). The accretion
+energy drives feedback that results in the quenching of galaxies,
+with a kinetic subgrid model for black hole feedback along with
+X-ray energy feedback included in SIMBA.
+%%%%%%%
 
-An introduction typically ends with a preview of the main results and overall structure.
 
-\section{Background}
+talk about dust handling in simba use \cite{liDusttogasDusttometalRatio2019} and \cite{lorenzonTracingEvolutionaryPathways2025}
 
-\section{Methods}
+\textsc{simba} uses a self-consistent dust framework evolving directly from initial conditions, which is responsible for production, growth, and destruction \parencite{liDusttogasDusttometalRatio2019}. All dust grains are assumed to have the same constant size of $0.1\micro m$ and have their motions tied to the gas particles.
 
-\subsection{Cosmological Simulations}
-There are two main types of simulations seen in modern cosmology; Hydrodynamical Simulations or Semi-Analytic Models (SAMs). The two can be differentiated by their level of complexity and depth by which they explore galaxy evolution and feedback \cite{neisteinHydrodynamicalSimulationsSemianalytic2012}.
+The primary \textsc{simba} run is used for this work containing $1024^3$ dark matter and $1024^3$ baryonic particles in a comoving volume $100h^{-1}$Mpc in a redshift range $0<z<249$. The resulting mass evolution is $9.6 \times 10^7 M_\odot$ for dark matter particles and $1.82 \times 10^7 M_\odot$ for baryonic gas elements. The simulations follow a $\Lambda$CDM cosmology consistent with  Planck16 \parencite{planckcollaborationPlanck2015Results2016}, and parameters $\Omega_m = 0.3$, $\Omega_\Lambda = 0.7$, , $\Omega_b = 0.048$, $H_0 = 68 \mathrm{kms^{-1}Mpc^{-1}}$, $\sigma_8 = 0.82$, and $n_s = 0.97$. Simulation runs output 151 snaps from $z=20 \rightarrow0$ which are processed into associated \textsc{caesar} catalogues which contain the necessary pre-computed properties for galaxies and halos. talk about and explain caesar here...
+
+
+
+should discuss dust, caesar, star formation
+caesar 
 
 \subsection{Light Cones}
 
-talk about frustums and making plots
+we only take redshift 0 to 7
+
+follow sub mm paper for light cone stuff 
+
+talk about frustums and making plots and what i did and how i used the light cones
 
 A light cone is a geometric construct typically seen in special relativity that represents the path of light travelling through spacetime from distant sources to an observer. In our context of galaxy surveys and cosmological simulations, a light cone catalogue allows us to mimic what a real telescope would observe: galaxies at different distances are seen at different cosmic times, since light from more distant galaxies has taken longer to reach us.
 

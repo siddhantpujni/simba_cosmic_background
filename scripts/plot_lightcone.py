@@ -42,6 +42,43 @@ def load_lightcone(path):
         }
     return data
 
+def load_app_mag(data, filter_name="g"):
+    """
+    Load apparent magnitude for each galaxy from Caesar snapshot files for a given filter.
+    filter_name: e.g. 'g', 'r', etc. (for 'appmag.g', 'appmag.r', ...)
+    Returns an array of apparent magnitudes (same length as lightcone).
+    """
+    n_gal = len(data["z"])
+    app_mag = np.full(n_gal, np.nan)
+    snap_arr = data["snap"]
+    gal_idx = data["galaxy_index"]
+    key_name = f"appmag.{filter_name}"
+
+    cache = {}
+    for snap in np.unique(snap_arr):
+        snap = int(snap)
+        hdf5 = HDF5_DIR / f"{SNAP_PREFIX}_{snap:03d}.hdf5"
+        if not hdf5.exists():
+            hdf5 = HDF5_DIR / f"{SNAP_PREFIX}_{snap}.hdf5"
+        if not hdf5.exists():
+            print(f"  WARN: missing {hdf5}, skipping snap {snap}")
+            continue
+        with h5py.File(hdf5, "r") as f:
+            group = f["galaxy_data/dicts"]
+            if key_name not in group:
+                print(f"  WARN: {key_name} missing in snap {snap}, skipping")
+                continue
+            cache[snap] = group[key_name][:]
+
+    for i in range(n_gal):
+        s = int(snap_arr[i])
+        gi = int(gal_idx[i])
+        if s in cache and gi < len(cache[s]):
+            val = cache[s][gi]
+            if np.isfinite(val):
+                app_mag[i] = val
+
+    return app_mag
 
 def load_lfir(data):
     """
@@ -82,28 +119,36 @@ def load_lfir(data):
 
     return lfir
 
-
-# ── Plot 1: N(z) histogram ──────────────────────────────────────────────
-def plot_ngal_vs_redshift(data, outpath, n_bins=50):
-    """Histogram of galaxy counts per redshift bin."""
+def plot_lightcone_slice_appmag(data, app_mag, outpath, absmag_key="absmag.g"):
+    """
+    2D light-cone slice colored by apparent magnitude.
+    """
     z = data["z"]
+    ra = data["ra"]
+    d_radial = cosmo.comoving_distance(z).to("Mpc").value
+    ra_centre = np.median(ra)
+    delta_ra_rad = np.deg2rad(ra - ra_centre)
+    d_transverse = delta_ra_rad * d_radial
+    y_lim = np.nanpercentile(np.abs(d_transverse), 99.5)
 
-    fig, ax = plt.subplots(figsize=(8, 5))
-    ax.hist(z, bins=n_bins, range=(0, z.max()), color="steelblue",
-            edgecolor="k", linewidth=0.4)
-    ax.set_xlabel("Redshift $z$", fontsize=12)
-    ax.set_ylabel("$N_{\\mathrm{gal}}$ per bin", fontsize=12)
-    ax.set_title(
-        f"SIMBA light-cone redshift distribution  "
-        f"($N_{{\\mathrm{{total}}}} = {len(z):,}$)",
-        fontsize=13,
+    fig, ax = plt.subplots(figsize=(10, 6))
+    im = ax.scatter(
+        d_radial, d_transverse, s=0.5, alpha=0.6,
+        c=app_mag, cmap="viridis_r",  # reverse so bright = yellow
+        vmin=np.nanpercentile(app_mag, 1),
+        vmax=np.nanpercentile(app_mag, 99),
+        rasterized=True,
     )
-    ax.tick_params(labelsize=10)
+    cb = fig.colorbar(im, ax=ax, pad=0.02)
+    cb.set_label(f"Apparent magnitude ({absmag_key})", fontsize=11)
+    ax.set_xlabel("Comoving radial distance [Mpc]", fontsize=11)
+    ax.set_ylabel("Comoving transverse distance [Mpc]", fontsize=11)
+    ax.set_ylim(-y_lim, y_lim)
+    ax.set_title("Galaxies colored by apparent magnitude", fontsize=12)
     fig.tight_layout()
     fig.savefig(outpath, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved: {outpath}")
-
 
 # ── Plot 2: 2-D light-cone slice ────────────────────────────────────────
 def plot_lightcone_slice(data, lfir, outpath):
@@ -148,128 +193,13 @@ def plot_lightcone_slice(data, lfir, outpath):
     plt.close(fig)
     print(f"Saved: {outpath}")
 
-# ────────────────────────────────────────────────────────────────
-def plot_projected_map(data, outpath, pixel_arcmin=0.25, psf_fwhm_arcmin=0.2466667):
-    """
-    Build a 2-D projected sky map from all light-cone galaxies,
-    summing stellar mass into each pixel, then convolve with a
-    Gaussian PSF to produce the 'observed' realisation.
-
-    Left  panel: raw projected SIMBA map (all galaxies, all redshifts)
-    Right panel: PSF-convolved 'observed' map
-
-    RA and DEC stored in the HDF5 file are in radians (astropy
-    decompose() artefact); multiply by (180/pi * 60) to get arcminutes.
-    """
-    # ── coordinate conversion: radians → arcminutes ──────────────────────
-    ra_am  = data["ra"]  * np.degrees(1.0) * 60.0   # arcmin
-    dec_am = data["dec"] * np.degrees(1.0) * 60.0   # arcmin
-    mass   = data["stellar_mass"]                    # M_sun
-
-    # Field side in arcminutes derived from stored area attribute
-    field_am = np.sqrt(data["area_deg2"]) * 60.0    # arcmin
-    n_pix    = int(np.ceil(field_am / pixel_arcmin))
-    edges    = np.linspace(0.0, n_pix * pixel_arcmin, n_pix + 1)
-
-    # ── 2-D stellar-mass map ─────────────────────────────────────────────
-    map_raw, _, _ = np.histogram2d(
-        ra_am, dec_am, bins=[edges, edges], weights=mass,
-    )
-
-    # ── Gaussian PSF convolution ─────────────────────────────────────────
-    sigma_pix = (psf_fwhm_arcmin / pixel_arcmin) / (2.0 * np.sqrt(2.0 * np.log(2.0)))
-    map_conv  = gaussian_filter(map_raw, sigma=sigma_pix)
-
-    # Surface brightness: M_sun / arcmin^2
-    pix_area = pixel_arcmin ** 2
-    sb_raw  = map_raw  / pix_area
-    sb_conv = map_conv / pix_area
-
-    # ── colour scale (shared vmax, individual vmins for log scale) ───────
-    vmax      = sb_raw.max()
-    vmin_raw  = sb_raw[sb_raw   > 0].min() if (sb_raw   > 0).any() else 1.0
-    vmin_conv = sb_conv[sb_conv > 0].min() if (sb_conv  > 0).any() else 1.0
-
-    extent = [0.0, n_pix * pixel_arcmin, 0.0, n_pix * pixel_arcmin]
-
-    # ── figure ───────────────────────────────────────────────────────────
-    fig, axes = plt.subplots(1, 2, figsize=(13, 6))
-
-    # -- left: raw projected map --
-    im0 = axes[0].imshow(
-        sb_raw.T, origin="lower", extent=extent,
-        cmap="inferno", norm=LogNorm(vmin=vmin_raw, vmax=vmax),
-        aspect="equal",
-    )
-    axes[0].set_xlabel("RA [arcmin]", fontsize=12)
-    axes[0].set_ylabel("DEC [arcmin]", fontsize=12)
-    axes[0].set_title(
-        "Projected SIMBA map\n"
-        r"(all objects, all $z$, summed $M_\star$)",
-        fontsize=11,
-    )
-    cb0 = fig.colorbar(im0, ax=axes[0], fraction=0.046, pad=0.04)
-    cb0.set_label(
-        r"$\Sigma_\star\;[\mathrm{M}_\odot\,\mathrm{arcmin}^{-2}]$",
-        fontsize=10,
-    )
-
-    # -- right: PSF-convolved "observed" map --
-    im1 = axes[1].imshow(
-        sb_conv.T, origin="lower", extent=extent,
-        cmap="inferno", norm=LogNorm(vmin=vmin_conv, vmax=vmax),
-        aspect="equal",
-    )
-    axes[1].set_xlabel("RA [arcmin]", fontsize=12)
-    axes[1].set_ylabel("DEC [arcmin]", fontsize=12)
-    axes[1].set_title(
-        f"Observed map  (PSF FWHM = {psf_fwhm_arcmin:.1f} arcmin)\n"
-        "Gaussian beam convolution",
-        fontsize=11,
-    )
-    cb1 = fig.colorbar(im1, ax=axes[1], fraction=0.046, pad=0.04)
-    cb1.set_label(
-        r"$\Sigma_\star\;[\mathrm{M}_\odot\,\mathrm{arcmin}^{-2}]$",
-        fontsize=10,
-    )
-
-    fig.suptitle(
-        rf"SIMBA EBL light-cone  "
-        rf"($0.5\,\mathrm{{deg}}^2$, $0 < z < 7$)  —  "
-        rf"$N_\mathrm{{gal}} = {len(mass):,}$",
-        fontsize=13,
-    )
-    fig.tight_layout()
-    fig.savefig(outpath, dpi=200, bbox_inches="tight")
-    plt.close(fig)
-    print(f"Saved: {outpath}")
-
-
 # ─────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     data = load_lightcone(LC_FILE)
-
-    # 1. N(z) histogram
-    plot_ngal_vs_redshift(
-        data,
-        FIG_DIR / "lightcone_ngal_vs_redshift.png",
-    )
-
-    # 2. 2-D light-cone slice (z-coloured + L_FIR-coloured)
-    print("Loading L_FIR from snapshot catalogues …")
-    lfir = load_lfir(data)
-    n_valid = np.isfinite(lfir).sum()
-    print(f"  L_FIR available for {n_valid:,} / {len(lfir):,} galaxies")
-
-    plot_lightcone_slice(
-        data, lfir,
-        FIG_DIR / "lightcone_slice_z_lfir.png",
-    )
-
-    # 3. Projected sky map
-    plot_projected_map(
-        data,
-        FIG_DIR / "lightcone_projected_map.png",
-        pixel_arcmin=0.25,
-        psf_fwhm_arcmin=0.2466667,
+    print("Loading apparent magnitude from snapshot catalogues …")
+    app_mag = load_app_mag(data, filter_name="g")  # or "r", "i", etc.
+    plot_lightcone_slice_appmag(
+        data, app_mag,
+        FIG_DIR / "lightcone_slice_appmag_g.png",
+        absmag_key="appmag.g"
     )

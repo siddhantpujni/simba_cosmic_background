@@ -12,7 +12,9 @@ import argparse
 import os
 import sys
 from pathlib import Path
+import pandas as pd
 
+sys.path.append("/home/spujni/simba_cosmic_background")
 os.environ.setdefault('SPS_HOME', '/home/spujni/fsps')
 
 import numpy as np
@@ -40,9 +42,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="Far-IR cosmic background with dust-temperature diagnostics"
     )
-    parser.add_argument("--sim", default="m25n256",
+    parser.add_argument("--sim", default="m100n1024",
                         choices=["m25n256", "m50n512", "m100n1024"])
-    parser.add_argument("--area", type=float, default=1.0)
+    parser.add_argument("--area", type=float, default=0.5)
     parser.add_argument("--z_min", type=float, default=0.0)
     parser.add_argument("--z_max", type=float, default=7.0)
     parser.add_argument(
@@ -54,6 +56,10 @@ def main():
 
     cfg = load_config(args.sim)
     print(f"Running on {cfg.name} (box={cfg.box_size_mpc_h} Mpc/h)\n")
+
+    df = pd.read_csv(r"/home/spujni/simba_cosmic_background/data/ebl/ebldata.csv")
+    df = df.sort_values(by = "wave")
+
 
     # ── Far-IR for each value of 'a' ─────────────────────────────
     fir_results = {}          # a_val -> (lam_um, nuInu_nW)
@@ -77,14 +83,11 @@ def main():
 
     # ── Figure layout: 2 rows ────────────────────────────────────
     #   top  : full-width far-IR SED overlays
-    #   bot-L: dust temperature histogram
-    #   bot-R: peak wavelength vs 'a'
-    fig = plt.figure(figsize=(14, 10))
-    gs = gridspec.GridSpec(2, 2, height_ratios=[1.4, 1],
-                           hspace=0.30, wspace=0.30)
-    ax_sed = fig.add_subplot(gs[0, :])
-    ax_hist = fig.add_subplot(gs[1, 0])
-    ax_peak = fig.add_subplot(gs[1, 1])
+    #   bot  : dust temperature histogram
+    fig = plt.figure(figsize=(10, 8))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[1.4, 1], hspace=0.30)
+    ax_sed = fig.add_subplot(gs[0])
+    ax_hist = fig.add_subplot(gs[1])
 
     cmap = plt.cm.autumn_r
     a_vals = sorted(fir_results.keys())
@@ -98,49 +101,38 @@ def main():
 
     ax_sed.set_xlabel(r'$\lambda_{\rm obs}$ [$\mu$m]', fontsize=13)
     ax_sed.set_ylabel(r'$\nu\, I_\nu$ [nW m$^{-2}$ sr$^{-1}$]', fontsize=13)
-    ax_sed.set_title(f'Far-IR background — {cfg.name}  '
+
+    ax_sed.scatter(df["wave"], df["ebl"], s=20, color='k', alpha=0.7, label='Observational EBL data')
+    ax_sed.errorbar(df["wave"], df["ebl"], yerr=df["debl"], fmt='none', ecolor='k', alpha=0.5, capsize=3)
+    ax_sed.set_xscale("log")
+    ax_sed.set_yscale("log")
+
+    ax_sed.set_title(f'Far-IR Cosmic Background Diagnostic Plot'
                      f'($z = {args.z_min}$–${args.z_max}$)', fontsize=14)
     ax_sed.legend(fontsize=10, ncol=2)
     ax_sed.grid(True, which='both', ls=':', alpha=0.4)
     ax_sed.set_xlim(8, 1e4)  # ~8 µm to 10 mm
 
-    # ── Bottom-left: dust temperature distribution ────────────────
+    # ── Bottom: dust temperature distribution ────────────────
     for a_val, col in zip(a_vals, colours):
         temps, _ = dust_temp_results[a_val]
         if len(temps) == 0:
             continue
         ax_hist.hist(temps, bins=60, range=(5, 80), alpha=0.55,
                      color=col, edgecolor='k', linewidth=0.3,
-                     label=f'$a = {a_val:+.2f}$'
-                           f'  (med = {np.nanmedian(temps):.1f} K)')
+                     label=f'$a = {a_val:+.4f}$'
+                           f'  (med = {np.nanmedian(temps):.3f} K)')
     ax_hist.set_xlabel(r'$T_{\rm eqv}$ [K]', fontsize=12)
     ax_hist.set_ylabel('Number of galaxies', fontsize=12)
     ax_hist.set_title('Dust temperature distribution', fontsize=13)
     ax_hist.legend(fontsize=9)
     ax_hist.grid(True, ls=':', alpha=0.4)
 
-    # ── Bottom-right: peak wavelength vs 'a' ─────────────────────
-    peaks_um = []
-    for a_val in a_vals:
-        lam_um, nuInu = fir_results[a_val]
-        valid = np.isfinite(nuInu) & (nuInu > 0)
-        if valid.any():
-            peaks_um.append(lam_um[valid][np.argmax(nuInu[valid])])
-        else:
-            peaks_um.append(np.nan)
-
-    ax_peak.plot(a_vals, peaks_um, 'o-', color='firebrick', lw=2, ms=8)
-    ax_peak.set_xlabel("Normalisation parameter  $a$", fontsize=12)
-    ax_peak.set_ylabel(r'$\lambda_{\rm peak}$ [$\mu$m]', fontsize=12)
-    ax_peak.set_title('Far-IR peak wavelength vs $a$', fontsize=13)
-    ax_peak.grid(True, ls=':', alpha=0.4)
-
     # ── Save ──────────────────────────────────────────────────────
     out = Path("figures/farIR") / f"farIR_bg_{cfg.name}_diagnostic.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=200, bbox_inches='tight')
     print(f"Saved -> {out}")
-
 
 if __name__ == "__main__":
     main()

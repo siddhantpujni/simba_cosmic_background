@@ -242,10 +242,13 @@ def lightcone_optical_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
             cache[snap_int] = (mags, mags_nodust)
 
         mags, mags_nodust = cache[snap_int]
-        
+
         # Vectorised approach: extract all valid galaxy indices at once
-        g_idx = gal_idx[smask].astype(int)
-        
+        # Filter out any NaN or invalid indices before casting to int
+        raw_idx = gal_idx[smask]
+        valid_mask = np.isfinite(raw_idx) & (raw_idx >= 0)
+        g_idx = raw_idx[valid_mask].astype(int)
+
         if len(g_idx) == 0:
             continue
 
@@ -253,30 +256,30 @@ def lightcone_optical_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
             # --- WITH DUST ---
             if filt in mags:
                 mag_arr = mags[filt]
-                # Safety check: ensure indices don't exceed the array bounds for this specific filter
-                valid_idx = g_idx[g_idx < len(mag_arr)]
-                
+                # Safety check: ensure indices are within valid bounds (both >= 0 and < len)
+                valid_idx = g_idx[(g_idx >= 0) & (g_idx < len(mag_arr))]
+
                 if len(valid_idx) > 0:
                     m = mag_arr[valid_idx]
-                    
+
                     valid_mags = np.isfinite(m) & (m < 90.0)
-                    
+
                     if np.any(valid_mags):
                         fnu_jy = 3631.0 * 10 ** (-m[valid_mags] / 2.5)
-                        total_fnu[i] += np.sum(fnu_jy)
-                        
+                        total_fnu[i] += np.nansum(fnu_jy)
+
             # --- WITHOUT DUST ---
             if filt in mags_nodust:
                 mag_arr_nd = mags_nodust[filt]
-                valid_idx_nd = g_idx[g_idx < len(mag_arr_nd)]
-                
+                valid_idx_nd = g_idx[(g_idx >= 0) & (g_idx < len(mag_arr_nd))]
+
                 if len(valid_idx_nd) > 0:
                     m_nd = mag_arr_nd[valid_idx_nd]
                     valid_mags_nd = np.isfinite(m_nd) & (m_nd < 90.0)
-                    
+
                     if np.any(valid_mags_nd):
                         fnu_jy_nd = 3631.0 * 10 ** (-m_nd[valid_mags_nd] / 2.5)
-                        total_fnu_nodust[i] += np.sum(fnu_jy_nd)
+                        total_fnu_nodust[i] += np.nansum(fnu_jy_nd)
 
     # Convert Jy to cgs: 1 Jy = 1e-23 erg/s/cm²/Hz
     total_fnu_cgs = total_fnu * 1e-23

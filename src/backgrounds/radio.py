@@ -37,7 +37,7 @@ def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
 
 
 def lightcone_radio_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
-                                n_points=500):
+                                n_points=500, galaxy_mask=None):
     """
     Compute the radio cosmic background intensity from star formation
     (Condon 1992 / Thomas+2021) **and** AGN accretion.
@@ -48,6 +48,12 @@ def lightcone_radio_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
     AGN :  P_rad(ν_rest) from Mdot_BH relation + ν^{-0.7}   [erg s⁻¹ Hz⁻¹]
 
     Observed flux:  F_ν = (1+z) P_ν / (4π d_L²)
+
+    Parameters
+    ----------
+    galaxy_mask : array-like, optional
+        Boolean mask of same length as lightcone galaxies. If provided,
+        only galaxies where mask is True are included. Used for jackknife.
 
     Returns
     -------
@@ -63,6 +69,15 @@ def lightcone_radio_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
         snap_arr = lc["snap"][:]
         gal_idx  = lc["galaxy_index"][:]
 
+    # Apply galaxy mask if provided
+    if galaxy_mask is not None:
+        galaxy_mask = np.asarray(galaxy_mask)
+        if len(galaxy_mask) != len(gal_z):
+            raise ValueError(f"galaxy_mask length ({len(galaxy_mask)}) != "
+                           f"lightcone length ({len(gal_z)})")
+    else:
+        galaxy_mask = np.ones(len(gal_z), dtype=bool)
+
     # Observed frequency grid: 10 MHz  →  100 GHz  (radio regime)
     nu_obs_hz = np.logspace(np.log10(1e7), np.log10(1e11), n_points)  # Hz
     omega_sr  = area_deg2 * (np.pi / 180.0) ** 2
@@ -72,12 +87,12 @@ def lightcone_radio_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
     cache = {}
 
     unique_snaps = np.unique(snap_arr)
-    print(f"Processing {len(gal_z)} galaxies across "
+    print(f"Processing {galaxy_mask.sum()} galaxies across "
           f"{len(unique_snaps)} snapshots (radio) …")
 
     for snap in unique_snaps:
         snap  = int(snap)
-        smask = snap_arr == snap
+        smask = (snap_arr == snap) & galaxy_mask
 
         if snap not in cache:
             hdf5 = cfg.hdf5_path(snap)

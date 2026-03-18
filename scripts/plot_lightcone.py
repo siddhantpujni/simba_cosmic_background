@@ -1,16 +1,17 @@
 """
 Visualise the SIMBA reconstructed light-cone.
 
-Produces two figures:
-  1. Radial (comoving) vs transverse (comoving) distance slice.
-  2. Sky-plane map with blended line-of-sight sources marked.
+Produces three figures:
+  1. Number of galaxies per redshift bin  (N vs z histogram).
+  2. 2-D light-cone slice (comoving radial vs transverse distance),
+     coloured by redshift and by L_FIR.
+  3. Sky-plane projected map with PSF convolution.
 """
 
 import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-from matplotlib.lines import Line2D
 from pathlib import Path
 from astropy.cosmology import Planck15 as cosmo
 import astropy.units as u
@@ -22,6 +23,10 @@ LC_FILE = ROOT / "data" / "lightcones" / "lc_m100n1024_a0.5_z0.0-7.0.h5"
 FIG_DIR = ROOT / "figures" / "lightcone"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
+# HDF5 snapshot directory (same layout used by src/config)
+HDF5_DIR = Path("/home/spujni/sim/m100n1024/s50/Groups/")
+SNAP_PREFIX = "m100n1024"
+
 
 def load_lightcone(path):
     """Load lightcone data from HDF5."""
@@ -31,102 +36,117 @@ def load_lightcone(path):
             "dec": f["DEC"][:],
             "z": f["z"][:],
             "stellar_mass": f["stellar_mass"][:],
+            "snap": f["snap"][:],
+            "galaxy_index": f["galaxy_index"][:],
             "area_deg2": f.attrs["area_deg2"],
         }
     return data
 
 
-def plot_lightcone_slice(data, outpath):
+def load_lfir(data):
     """
-    2x2 radial-vs-transverse number-density maps in redshift bins:
-    z = [0,1), [1,2), [2,3), [4,7].
+    Cross-reference snapshot catalogues to retrieve per-galaxy L_FIR.
 
-    This highlights the rise in galaxy counts up to z~2 and decline at higher z.
+    Returns an array of L_FIR values (L_sun) with the same length as the
+    lightcone.  Galaxies for which L_FIR is unavailable are set to NaN.
+    """
+    n_gal = len(data["z"])
+    lfir = np.full(n_gal, np.nan)
+
+    snap_arr = data["snap"]
+    gal_idx = data["galaxy_index"]
+
+    cache = {}
+    for snap in np.unique(snap_arr):
+        snap = int(snap)
+        # Try zero-padded then unpadded filename
+        hdf5 = HDF5_DIR / f"{SNAP_PREFIX}_{snap:03d}.hdf5"
+        if not hdf5.exists():
+            hdf5 = HDF5_DIR / f"{SNAP_PREFIX}_{snap}.hdf5"
+        if not hdf5.exists():
+            print(f"  WARN: missing {hdf5}, skipping snap {snap}")
+            continue
+        with h5py.File(hdf5, "r") as f:
+            if "galaxy_data/L_FIR" not in f:
+                print(f"  WARN: L_FIR missing in snap {snap}, skipping")
+                continue
+            cache[snap] = f["galaxy_data/L_FIR"][:]
+
+    for i in range(n_gal):
+        s = int(snap_arr[i])
+        gi = int(gal_idx[i])
+        if s in cache and gi < len(cache[s]):
+            val = cache[s][gi]
+            if np.isfinite(val) and val > 0:
+                lfir[i] = val
+
+    return lfir
+
+
+# ── Plot 1: N(z) histogram ──────────────────────────────────────────────
+def plot_ngal_vs_redshift(data, outpath, n_bins=50):
+    """Histogram of galaxy counts per redshift bin."""
+    z = data["z"]
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.hist(z, bins=n_bins, range=(0, z.max()), color="steelblue",
+            edgecolor="k", linewidth=0.4)
+    ax.set_xlabel("Redshift $z$", fontsize=12)
+    ax.set_ylabel("$N_{\\mathrm{gal}}$ per bin", fontsize=12)
+    ax.set_title(
+        f"SIMBA light-cone redshift distribution  "
+        f"($N_{{\\mathrm{{total}}}} = {len(z):,}$)",
+        fontsize=13,
+    )
+    ax.tick_params(labelsize=10)
+    fig.tight_layout()
+    fig.savefig(outpath, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Saved: {outpath}")
+
+
+# ── Plot 2: 2-D light-cone slice ────────────────────────────────────────
+def plot_lightcone_slice(data, lfir, outpath):
+    """
+    Two-panel 2-D light-cone slice (comoving radial vs transverse distance).
+
+    Left  panel: points coloured by redshift.
+    Right panel: points coloured by L_FIR (galaxies without L_FIR are grey).
     """
     z = data["z"]
-    ra = data["ra"]  # degrees
+    ra = data["ra"]
 
-    # Comoving coordinates
     d_radial = cosmo.comoving_distance(z).to("Mpc").value
     ra_centre = np.median(ra)
     delta_ra_rad = np.deg2rad(ra - ra_centre)
     d_transverse = delta_ra_rad * d_radial
 
-    # Requested redshift bins
-    z_bins = [(0.0, 1.0), (1.0, 2.0), (2.0, 3.0), (4.0, 7.0)]
-
-    # Shared plotting grid so panels are directly comparable
-    x_max = np.nanmax(d_radial)
     y_lim = np.nanpercentile(np.abs(d_transverse), 99.5)
-    x_edges = np.linspace(0.0, x_max, 220)
-    y_edges = np.linspace(-y_lim, y_lim, 220)
 
-    # Precompute densities to share one color scale
-    densities = []
-    counts = []
-    vmax = 0.0
-    vmin_pos = np.inf
+    fig, axes = plt.subplots(1, 1, figsize=(16, 6))
 
-    for z0, z1 in z_bins:
-        m = (z >= z0) & (z < z1)
-        counts.append(int(m.sum()))
-
-        H, _, _ = np.histogram2d(d_radial[m], d_transverse[m], bins=[x_edges, y_edges])
-
-        # Number density in Mpc^-2 (count per pixel area in comoving coords)
-        dx = np.diff(x_edges)[:, None]
-        dy = np.diff(y_edges)[None, :]
-        density = H / (dx * dy)
-
-        densities.append(density)
-
-        if np.any(density > 0):
-            vmax = max(vmax, float(np.nanmax(density)))
-            vmin_pos = min(vmin_pos, float(np.nanmin(density[density > 0])))
-
-    if not np.isfinite(vmin_pos):
-        vmin_pos = 1e-6
-    if vmax <= vmin_pos:
-        vmax = vmin_pos * 10.0
-
-    # Figure
-    fig, axes = plt.subplots(2, 2, figsize=(13, 7), sharex=True, sharey=True)
-    axes = axes.ravel()
-
-    for ax, (z0, z1), density, n_gal in zip(axes, z_bins, densities, counts):
-        if np.any(density > 0):
-            im = ax.pcolormesh(
-                x_edges, y_edges, density.T,
-                cmap="magma", norm=LogNorm(vmin=vmin_pos, vmax=vmax), shading="auto"
-            )
-        else:
-            im = None
-            ax.text(0.5, 0.5, "No galaxies", transform=ax.transAxes, ha="center", va="center")
-
-        ax.set_title(f"z = {z0:.0f}-{z1:.0f}   (N = {n_gal:,})", fontsize=11)
-        ax.tick_params(labelsize=9)
-
-    # Axis labels
-    axes[2].set_xlabel(r"Comoving radial distance [Mpc]", fontsize=11)
-    axes[3].set_xlabel(r"Comoving radial distance [Mpc]", fontsize=11)
-    axes[0].set_ylabel(r"Comoving transverse distance [Mpc]", fontsize=11)
-    axes[2].set_ylabel(r"Comoving transverse distance [Mpc]", fontsize=11)
-
-    # Shared colorbar
-    if 'im' in locals() and im is not None:
-        cbar = fig.colorbar(im, ax=axes, pad=0.01, aspect=40)
-        cbar.set_label(r"Galaxy number density [Mpc$^{-2}$]", fontsize=11)
+    # ── left: coloured by redshift ───────────────────────────────────────
+    im0 = axes.scatter(
+        d_radial, d_transverse, s=0.5, alpha=0.6,
+        c=z, cmap="plasma", vmin=0, vmax=z.max(),
+        rasterized=True,
+    )
+    cb0 = fig.colorbar(im0, ax=axes, pad=0.02)
+    cb0.set_label("Redshift $z$", fontsize=11)
+    axes.set_xlabel("Comoving radial distance [Mpc]", fontsize=11)
+    axes.set_ylabel("Comoving transverse distance [Mpc]", fontsize=11)
+    axes.set_ylim(-y_lim, y_lim)
+    axes.set_title("Number of Galaxies Coloured by Redshift", fontsize=12)
 
     fig.suptitle(
-        r"SIMBA light-cone number density in radial-transverse slices by redshift",
-        fontsize=13,
+        f"SIMBA light cone 2-D slice  "
+        f"($N_{{\\mathrm{{gal}}}} = {len(z):,}$)",
+        fontsize=14,
     )
-    fig.tight_layout()
-    fig.savefig(outpath, dpi=250, bbox_inches="tight")
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.savefig(outpath, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved: {outpath}")
-
-
 
 # ────────────────────────────────────────────────────────────────
 def plot_projected_map(data, outpath, pixel_arcmin=0.25, psf_fwhm_arcmin=0.2466667):
@@ -229,13 +249,24 @@ def plot_projected_map(data, outpath, pixel_arcmin=0.25, psf_fwhm_arcmin=0.24666
 if __name__ == "__main__":
     data = load_lightcone(LC_FILE)
 
-    plot_lightcone_slice(
+    # 1. N(z) histogram
+    plot_ngal_vs_redshift(
         data,
-        FIG_DIR / "lightcone_radial_transverse_density_zbins.png",
+        FIG_DIR / "lightcone_ngal_vs_redshift.png",
     )
 
-    # plot_sky_plane(...)  # delete this entire call
+    # 2. 2-D light-cone slice (z-coloured + L_FIR-coloured)
+    print("Loading L_FIR from snapshot catalogues …")
+    lfir = load_lfir(data)
+    n_valid = np.isfinite(lfir).sum()
+    print(f"  L_FIR available for {n_valid:,} / {len(lfir):,} galaxies")
 
+    plot_lightcone_slice(
+        data, lfir,
+        FIG_DIR / "lightcone_slice_z_lfir.png",
+    )
+
+    # 3. Projected sky map
     plot_projected_map(
         data,
         FIG_DIR / "lightcone_projected_map.png",

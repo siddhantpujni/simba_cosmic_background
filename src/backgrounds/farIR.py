@@ -73,7 +73,7 @@ def build_lightcone(cfg, area_deg2=0.5, z_min=0.0, z_max=7.0):
 
 def lightcone_farIR_background(cfg, area_deg2=0.5, z_min=0.0, z_max=7.0,
                                 beta=2.0, n_points=500, a_dust=-0.0455,
-                                return_dust_temps=False):
+                                return_dust_temps=False, galaxy_mask=None):
     """
     Compute the far-IR cosmic background intensity by summing
     redshifted MBB SEDs from all lightcone galaxies.
@@ -85,6 +85,9 @@ def lightcone_farIR_background(cfg, area_deg2=0.5, z_min=0.0, z_max=7.0,
     return_dust_temps : bool
         If True, also return arrays of per-galaxy dust temperatures and
         redshifts (useful for diagnostic plots).
+    galaxy_mask : array-like, optional
+        Boolean mask of same length as lightcone galaxies. If provided,
+        only galaxies where mask is True are included. Used for jackknife.
 
     Returns
     -------
@@ -99,6 +102,15 @@ def lightcone_farIR_background(cfg, area_deg2=0.5, z_min=0.0, z_max=7.0,
         snap_arr = lc["snap"][:]
         gal_idx = lc["galaxy_index"][:]
 
+    # Apply galaxy mask if provided
+    if galaxy_mask is not None:
+        galaxy_mask = np.asarray(galaxy_mask)
+        if len(galaxy_mask) != len(gal_z):
+            raise ValueError(f"galaxy_mask length ({len(galaxy_mask)}) != "
+                           f"lightcone length ({len(gal_z)})")
+    else:
+        galaxy_mask = np.ones(len(gal_z), dtype=bool)
+
     # ── wavelength grid: 8 µm  →  10 mm ─────────────────
     lam_obs = np.logspace(np.log10(1.5e5), np.log10(1e8), n_points)  # Å
     omega_sr = area_deg2 * (np.pi / 180.0) ** 2
@@ -111,12 +123,12 @@ def lightcone_farIR_background(cfg, area_deg2=0.5, z_min=0.0, z_max=7.0,
     all_zs    = [] if return_dust_temps else None
 
     unique_snaps = np.unique(snap_arr)
-    print(f"Processing {len(gal_z)} galaxies across "
+    print(f"Processing {galaxy_mask.sum()} galaxies across "
           f"{len(unique_snaps)} snapshots …")
 
     for snap in unique_snaps:
         snap = int(snap)
-        smask = snap_arr == snap
+        smask = (snap_arr == snap) & galaxy_mask
 
         if snap not in cache:
             hdf5 = cfg.hdf5_path(snap)

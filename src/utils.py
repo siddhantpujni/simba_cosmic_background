@@ -108,7 +108,7 @@ def save_background_results(
         rad.create_dataset("nu_Hz", data=nu_radio)
         rad.create_dataset("I_nu", data=I_nu_radio)
         rad.create_dataset("lam_um", data=lam_radio_um)
-        rad.create_dataset("nuInu", data=nuInu_radio)
+        rad.create_dataset("nuInu_nW", data=nuInu_radio_nW)
         
         # ── Dust diagnostics (for T vs z plots) ──
         if dust_temps is not None and len(dust_temps) > 0:

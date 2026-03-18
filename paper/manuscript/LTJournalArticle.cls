@@ -51,10 +51,10 @@
 %----------------------------------------------------------------------------------------
 
 \usepackage[
-	top=2.2cm, % Top margin
-	bottom=2.2cm, % Bottom margin
-	left=1.8cm, % Left margin
-	right=1.8cm, % Right margin
+	top=2cm, % Top margin
+	bottom=2cm, % Bottom margin
+	left=1.6cm, % Left margin
+	right=1.6cm, % Right margin
 	footskip=1cm, % Space from the bottom margin to the baseline of the footer
 	headsep=0.75cm, % Space from the top margin to the baseline of the header
 	columnsep=20pt, % Space between text columns (in twocolumn mode)

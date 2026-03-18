@@ -484,7 +484,7 @@ P_{\mathrm{thermal}} (\mathrm{W\,Hz^{-1}})
 
 \noindent $A$ and $B$ are constants chosen to make the function continuous and normalised. Since the SFR is a mass rate we need the mass fraction which is \cref{eq:chabrierMassFraction} and then $\mathrm{SFR}_{>5}=f_{>5} \times \mathrm{SFR_total}$. Need to integrate \cref{eq:chabrierLogNormalDistribuition} numerically it has no nice analytic form, will just use \texttt{scipy.quad}
 
-Current implementation does only massive star formation which is greater than 5 solar masses, there is no AGN jets modelled yet which \cite{thomasRadioGalaxyPopulation2021} does analyse and discuss in the paper.
+Current implementation does only massive star formation which is greater than 5 solar masses, there is no AGN jets modelled yet which \cite{thomasRadioGalaxyPopulation2021} does analyse and discuss in the paper. Need to add on the AGN contributions which will dominate.
 
 For far IR I still need to spend a little bit more time to figure out deciding on the normalisation factor and what gives best value. Need to add the overplotting of Simon Driver EBL data.
 
@@ -497,11 +497,12 @@ For far IR I still need to spend a little bit more time to figure out deciding o
     \label{fig:placeholder}
 \end{figure}
 
+Fixed and added the AGN radio emission as described in \cite{thomasRadioGalaxyPopulation2021}
 
 \newday*{2026-03-04} Show Romeel all results for temp diagnostics and the radio emission combined plot. I still need to add the AGN feedback radio emission which will likely dominated the spectrum but \cite{thomasRadioGalaxyPopulation2021} quotes an equation with no $\nu$ dependence so I am not sure to approach this. The equation is 
 
 \begin{equation}
-    \frac{P_\mathrm{Rad}}{10^{30}\mathrm{erg}\text{ }\mathrm{s^{-1}}} = \frac{\dot{M}_{BH}}{4\times10^{17}\mathrm{g}\text{ }\mathrm{s^{-1}}}
+    \frac{P_\mathrm{Rad}}{10^{30}\mathrm{erg}\text{ }\mathrm{s^{-1}}} = \left(\frac{\dot{M}_{BH}}{4\times10^{17}\mathrm{g}\text{ }\mathrm{s^{-1}}}\right)^\frac{17}{12}
     \label{agnRadioEmission}
 \end{equation}
 
@@ -629,7 +630,7 @@ Overall the fit for far IR does not look good i tried redoing the fit after drop
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{}
+    \includegraphics[width=0.5\linewidth]{pass}
     \caption{Caption}
     \label{fig:wjfsd}
 \end{figure}
@@ -671,6 +672,48 @@ visualise the lightcone
 check over code for why it depends on box size and check units and errors cause optical doesn't look right. read eagle sim paper, visualise lightcones 
 
 read the eagle sim SED paper to double check methods
+
+\newday{2026-03-14} started working on plotting the light cones using gaussian psf and following the ones presented in \cite{lovellChristopherSimba_lightcone_generation2021}.
+
+\newday{2026-03-16} been working on writing up the report for the last few days but have some questions for Romeel:
+
+- how to propogate uncertainties in $a_{dust}$ into the far IR SED/background is there any way of doing so or do i just say the uncertainty is small enough where different plots look identical and can't really be told apart. 
+- light cone visualisations
+- how to cite hogg pre print luminosity distance stuff
+- switch to using frequency in radio intead of wavelengths is that fine
+- would i include the contributions for each background in the methods as a small paragraph at the start or in the intro? as in like oh optical is galaxy stuff where young hot contribute to bluelight, far ir is dust extinction, radio we consider sf and radio agn? where should i include this info as i dont really have an intro anymore
+- how much justification and superfluous detail am i providing like in radio about why the radio luminosity calibration depends primarily on high mass stars. I THINK I NEED MORE EXPLANATIONS / JUSTIFICATIONS OF DECISIONS ACROSS
+- can i just say at the start oh im comparing to observed dataset from simon driver and then later just say oh observed data here h
+- should i include the temp histrogram of the galaxies?
+- do i need the projected sky map with the psf and blurring and stuff and where do i include the light cone visualisation plot...method or results
+
+\newday{2026-03-16}
+made a mistake forgot to include the 17/12 exponent in the AGN radio emission. i was also making a mistake with The paper's relation giving you a bolometric radio power P\_Rad (units: erg s⁻¹), not a spectral luminosity P\_ν (erg s⁻¹ Hz⁻¹). had to fix unit conversion and this fixed it, mistakes were just cancelling out.
+
+made light cone plots to colour by redshift and show the density:
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/lightcone/lightcone_slice_z_lfir.png}
+    \caption{Wedge diagram of the \textsc{simba} light cone showing comoving radial distance (Mpc) along the x-axis and comoving transverse distance (Mpc) along the y-axis. Each points represents an individual galaxy, coloured by its respective redshift.}
+    \label{fig:lcWedge}
+\end{figure}
+
+\newday*{2026-03-18}
+
+put redshift along the top and colour the galaxies by some luminosity to show more information in some optical band to show. could colour lc in optical, lfir, and radio all of them so the total flux/luminosity in each regime to show densities across them
+
+double check optical again to see for mistakes
+
+make 16 different curves using jackknife and then the backgroudn for each one and use that with mean and uncertaintities to get some measure of cosmic variance.
+
+plot the dust temp plot from diagnostics with the fitting and the spread. get median temp but there is some spread and there is a variance of so and so and its on the galaxy thing and not for the background itself. but the median is this and we get lower too cause spread at higher z more temp so its higher cause of sf, and cite that paper i sent romeel. do dust and then 3 sigma each side to show the spread with the variance of the T
+
+WHERE SHOULD I INCLUDE THE PAHS STUFF. IR IS DOMINATED BY PAHS but requires FULL RADIATIVE transfer code. 
+
+optical/near IR should be really good because the imf and other stuff is reproduced really really well
+
+need to fix ebl plot by emitting the data points. because they're split and plotting all combined, agn only, and sf only for radio so going to plot only combined. This gives a fairly large overestimate of the radio spectrum as seen in the figure: which is not obvious. i think you could argue that current radio surveys are not very deep, so maybe they are missing lots of objects that should be contributing. to that end, you could make a cut on your objects, i.e. only sum up objects with L\_1.4>1e23 or something. see if that might explain why the data is lower.
 
 
 \end{document}

@@ -17,7 +17,7 @@
     urlcolor=magenta
 }
 
-\runninghead{The Colour of Simba's Universe} 
+\runninghead{The Colour of \textsc{simba}'s Universe} 
 
 \begin{document}
 \epsfxsize=40mm                         % Size of crest
@@ -64,154 +64,321 @@ We present ground-based transit photometry of the hot Jupiter WASP-135b obtained
 
 \section{Introduction}
 
-There are two main types of simulations seen in modern cosmology; Hydrodynamical Simulations or Semi-Analytic Models (SAMs). The two can be differentiated by their level of complexity and depth by which they explore galaxy evolution and feedback \parencite{neisteinHydrodynamicalSimulationsSemianalytic2012}.  more detail on hydro sims here we focus on hydro and blah blah blah
+Hydrodynamical simulations serve as theoretical laboratories enabling controlled exploration of the cosmos through modelling of galaxy evolution and feedback mechanisms. As observational capabilities sharpen through JWST, Euclid, and DESI, simulations play an increasingly critical role in interpreting results to refine our underlying understanding of astrophysics. There are two main types of simulations seen in modern cosmology; Hydrodynamical Simulations or Semi-Analytic Models (SAMs). The two can be differentiated by their level of complexity and depth by which they explore galaxy evolution and feedback \parencite{neisteinHydrodynamicalSimulationsSemianalytic2012}.  more detail on hydro sims here we focus on hydro and blah blah blah
 
-Hydrodynamical simulations serve as theoretical laboratories enabling controlled exploration of the cosmos through modelling of galaxy evolution and feedback mechanisms. As observational capabilities sharpen through JWST, Euclid, and DESI, simulations play an increasingly critical role in interpreting results to refine our underlying understanding of astrophysics.  
-Olbers paradox questions why the night sky is dark given an infinite universe where every line of sight should be covered by the light of some distant star. In fact, the night sky is not dark and this is indeed true and the night sky is brightly lit but just not in the optical regime but the entire electromagnetic spectrum. As light travels in this infinite universe from these distant stars it undergoes a phenomenon known as cosmological redshift, a stretching of the photons wavelength due to the expansion of the universe. As a result, the night sky is completely lit up with various wavelengths of the electromagnetic spectrum, or light, and not all of it reaches us in the optical regime. Known as the Cosmic Spectrum of the universe or the extragalactic background light (EBL), it has been measured for the observable universe *CITATIONS HERE*. However, here we do the same for the state-of-the-art cosmological hydrodynamic simulation SIMBA \cite{daveSimbaCosmologicalSimulations2019}.
+Olbers paradox questions why the night sky is dark given an infinite universe where every line of sight should be covered by the light of some distant star. In fact, the night sky is not dark and this is indeed true and the night sky is brightly lit but just not in the optical regime but the entire electromagnetic spectrum. As light travels in this infinite universe from these distant stars it undergoes a phenomenon known as cosmological redshift, a stretching of the photons wavelength due to the expansion of the universe. As a result, the night sky is completely lit up with various wavelengths of the electromagnetic spectrum, or light, and not all of it reaches us in the optical regime. Known as the Cosmic Spectrum of the universe or the extragalactic background light (EBL), it has been measured for the observable universe in several defining reviews \parencite{longairUniversalElectromagneticBackground1972,kashlinskyCosmicInfraredBackground2005,wessonOlberssParadoxSpectral1991,hauserCosmicInfraredBackground2001}. Often referred to as the Cosmic Spectrum of the Universe, or the extragalactic background light (EBL) it is defined as the specific intensity of cosmic light expressed in $\mathrm{nW\ m^{-2}\ sr^{-1}}$.
 
-The common approach is to separate the electromagnetic spectrum into its typical components (Gamma-rays, X-rays, UV, Optical, Infrared, Radio). This allows us to delve into a whole sea of information about the earliest stages of the universe and the following evolution into its current state. 
+*CITATIONS HERE*. However, here we do the same for the state-of-the-art cosmological hydrodynamic simulation SIMBA  
+
+The common approach for both observational and simulation based EBLs, as seen in a recent reviews by \cite{hillSpectrumUniverse2018,baesCosmicSpectralEnergy2019} is to separate the electromagnetic spectrum into its typical components (Gamma-rays, X-rays, UV, Optical, Infrared, Radio). This allows us to delve into a whole sea of information about the earliest stages of the universe and the following evolution into its current state. Measurements of these backgrounds encode the primary photon production processes that have taken place over the entire universes lifecycle.
+
+
+talk abuot whats dominated where
+
+
+
+explain what each background is where it comes from what contributes to it and then necceasry explanation
 
 -motivation for why we should study this subject and topic, why its important
+
+The extragalactic background light (EBL) represents the integrated radiation produced by all galaxies across cosmic time. Measuring and modelling the spectral energy distribution (SED) of the Universe provides a powerful constraint on the history of star formation, dust processing, and black hole activity.
 
 general physics background thats needed
 
 anything above redshift z=7 is useless and way too dim and doesn't account for anything so is typically ignored even from the data as its too early in the universe for anything to either have formed or have any valuable additions. this is supported by the redshift binned data which shows the absolutely minimal addition of late redshift files 
 
+we do this by calculating each individual background and then summing them together on one plot
+
+we finally compare our computed CSED to early access observational data of an ebl provided by simon driver to see recreating of observational results 
+
+overall to compute the SED in each part of the EM spectrum the following simple method is applied: (i) constructing a general light cone catalogue with galaxy redshifts and sky positions, (ii) model each galaxy's rest frame luminosity for the specific regime based on prominent contributing factors, and (iii) convert luminosities to observed flux densities if needed and then sum and normalise by light cone solid angle to obtain specific intensity $I_\nu$
+
+want to mention which part of the spectra is dominanted by what lead this into why its important to study this stuff. 
+
+the two peaks of the cosmic SED
+
+optimal way of measuring csed is volume limited blah blah cite eagle and then there is observational surveys done to do so and cite everything eagel cites and then mention the new simon driver paper as well which does it so and so
+
+we compare to drivers observed data set
+PROJECT AIMS
+
+should include all concepts and information needed to understand the report
+
+use the following papers below for writing the introduction, they have a good set of references and quote/cite stuff well in general:
+
+1. for observational stuff: https://academic.oup.com/mnras/article/470/2/1342/3854789
+2. for general structure: https://ui.adsabs.harvard.edu/abs/2019MNRAS.484.4069B/abstract 
+3. the new simon driver paper from romeel (we thank for early release and compare to that data)
+4. just use more links and citations from these papers
+
+need to be careful woth adding motivations for EVERYTHING
+
 \section{Methodologies}
 
-\subsection{The \texttt{Simba} Simulations}
+\subsection{The \texttt{SIMBA} Simulations}
 
 The \textsc{simba} simulations \parencite{daveSimbaCosmologicalSimulations2019} are hydrodynamical state-of-the-art simulations of galaxy formation, built on \textsc{gizmo} \parencite{hopkinsNewClassAccurate2015} using its meshless finite mass (MFM) method. Building on the previous generation \textsc{mufasa} simulations with improvements to the subgrid prescriptions for both star formation and active galactic nucleus (AGN) feedback via modified code from \textsc{gadget-3} \parencite{springelCosmologicalSimulationCode2005} it evolves dark matter and baryonic elements together including gravity and pressure forces.
 
-\textsc{simba} approaches star formation based on molecular gas fraction following the $H_2$ Schmidt-Kennicutt relation with a fixed star formation efficiency $\epsilon_\star=0.02$ \parencite{robertc.kennicuttGlobalSchmidtLaw1998}. The star formation rate (SFR) is based on the $H2$ fraction which is computed via the \cite{krumholzCOMPARISONMETHODSDETERMINING2011} model. Stellar feedback is present via metal loaded winds that enrich the ISM for future star formation.
+\textsc{simba} approaches star formation based on molecular gas fraction following the $H_2$ Schmidt-Kennicutt relation with a fixed star formation efficiency $\epsilon_\star=0.02$ \parencite{robertc.kennicuttGlobalSchmidtLaw1998}. The star formation rate (SFR) is based on the $H2$ fraction which is computed via the \cite{krumholzCOMPARISONMETHODSDETERMINING2011} model. Stellar feedback is present via metal loaded kinetic winds that enrich the ISM for future star formation. Both torque limited \parencite{angles-alcazarGravitationalTorquedrivenBlack2017} and Bondi accretion \parencite{bondiSphericallySymmetricalAccretion1952,bondiMechanismAccretionStars1944} are used to model super massive black hole (SMBH) growth based on a cold accretion mode or a hot halo mode respectively. The resulting energetic feedback is modelled kinetically depending on the Eddington ratio which serves to quench galaxies along with X-ray energy feedback based on \cite{choiRADIATIVEMOMENTUMBASEDMECHANICAL2012}.
 
+Finally, \textsc{simba} uses a self-consistent dust framework evolving directly from initial conditions, which is responsible for production, growth, and destruction \parencite{liDusttogasDusttometalRatio2019}. All dust grains are assumed to have the same constant size of $0.1 \mu m$ and have their motions coupled to gas flows. MORE DUST
 
-%%%%%%
-As the next generation of the MUFASA simulations (Dave,´ Thompson \& Hopkins 2016), SIMBA builds on the work of its predecessor
-by incorporating a unique two-mode accretion model for black holes
-and implementing variousimprovements to the subgrid prescriptions
-for star formation and feedback from active galactic nuclei. For cold
-gas (T < 105 K), black hole growth is implemented via a torquelimited accretion model (Hopkins \& Quataert 2011; Angles-Alc ´ azar ´
-et al. 2017), where instabilities in the cold gaseous disc give rise to
-gravitational torques which drive gas inflows, while Bondi accretion
-(Bondi 1952) is adopted for hot gas (T > 105 K). The accretion
-energy drives feedback that results in the quenching of galaxies,
-with a kinetic subgrid model for black hole feedback along with
-X-ray energy feedback included in SIMBA.
-%%%%%%%
-
-
-talk about dust handling in simba use \cite{liDusttogasDusttometalRatio2019} and \cite{lorenzonTracingEvolutionaryPathways2025}
-
-\textsc{simba} uses a self-consistent dust framework evolving directly from initial conditions, which is responsible for production, growth, and destruction \parencite{liDusttogasDusttometalRatio2019}. All dust grains are assumed to have the same constant size of $0.1\micro m$ and have their motions tied to the gas particles.
-
-The primary \textsc{simba} run is used for this work containing $1024^3$ dark matter and $1024^3$ baryonic particles in a comoving volume $100h^{-1}$Mpc in a redshift range $0<z<249$. The resulting mass evolution is $9.6 \times 10^7 M_\odot$ for dark matter particles and $1.82 \times 10^7 M_\odot$ for baryonic gas elements. The simulations follow a $\Lambda$CDM cosmology consistent with  Planck16 \parencite{planckcollaborationPlanck2015Results2016}, and parameters $\Omega_m = 0.3$, $\Omega_\Lambda = 0.7$, , $\Omega_b = 0.048$, $H_0 = 68 \mathrm{kms^{-1}Mpc^{-1}}$, $\sigma_8 = 0.82$, and $n_s = 0.97$. Simulation runs output 151 snaps from $z=20 \rightarrow0$ which are processed into associated \textsc{caesar} catalogues which contain the necessary pre-computed properties for galaxies and halos. talk about and explain caesar here...
-
-
-
-should discuss dust, caesar, star formation
-caesar 
+The primary \textsc{simba} run is used for this work containing $1024^3$ dark matter and $1024^3$ baryonic particles in a comoving volume $100h^{-1}$Mpc in a redshift range $0<z<249$. The resulting mass evolution is $9.6 \times 10^7 M_\odot$ for dark matter particles and $1.82 \times 10^7 M_\odot$ for baryonic gas elements. The simulations follow a $\Lambda$CDM cosmology consistent with  Planck16 \parencite{planckcollaborationPlanck2015Results2016}, and parameters $\Omega_m = 0.3$, $\Omega_\Lambda = 0.7$, , $\Omega_b = 0.048$, $H_0 = 68 \mathrm{kms^{-1}Mpc^{-1}}$, $\sigma_8 = 0.82$, and $n_s = 0.97$. Simulation runs output 151 snapshots from $z=20 \rightarrow 0$ which are processed into \textsc{caesar} catalogues which contain the necessary pre-computed properties for galaxies and halos.\textsc{caesar}\footnote{caesar.readthedocs.io/en/latest/index.html} is a python based \textsc{yt} extension for analysing outputs from cosmological simulations through an intuitive interface without the original simulation binary. It outputs a \textsc{hdf5} catalogue that contains the galaxy and halo properties used for the analysis in this work. One may also conduct photometry for galaxy spectra using \textsc{fsps}.
 
 \subsection{Light Cones}
+\label{subsec:lcConstruction}
 
-we only take redshift 0 to 7
+A light cone is a geometric construct typically seen in special relativity that represents the path of light travelling through spacetime from distant sources to an observer. In our context of galaxy surveys and cosmological simulations, a light cone catalogue allows us to mimic what a real telescope would observe: galaxies at different distances are seen at different cosmic times, so we account for the fact that the galaxy population evolves with cosmic time and that more distant galaxies contribute less flux due to the inverse square law and cosmological dimming. Constructing a light cone with the \textsc{simba} simulations involves stitching together multiple snapshots, each representing the universe at a specific redshift, we adopt the method as described in \cite{lovellReproducingSubmillimetreGalaxy2021}\footnote{github.com/christopherlovell/simba\_lightcone\_generation}. The light cone was only taken within the range $0<z<7$ as snapshots beyond this either did not contain any halo data or had inconsequential contributions to the overall light. The applied sky area was 0.5 $ \mathrm{deg}^2$ sky area and 
 
-follow sub mm paper for light cone stuff 
+we show visualisations of this light cone to see the changing density as the density of galaxies falls off beyond z=5 and there's minimal contributions majoriryt of them and they peak at $z=2$ which corresponds to cosmic time of
 
-talk about frustums and making plots and what i did and how i used the light cones
+The resulting light cone allows us to compute the necessary observable quantities such as the integrated cosmic background spectrum to form the respective SED for each electromagnetic spectrum component. By summing the flux contributions from all galaxies in the light cone, each appropriately dimmed according to its luminosity distance, we obtain a prediction for the total EBL that would be measured by an observer. This is fundamentally different from summing galaxies at a single redshift, as it properly accounts for the fact that the galaxy population evolves with cosmic time and that more distant galaxies contribute less flux due to the inverse-square law and cosmological dimming.
 
-A light cone is a geometric construct typically seen in special relativity that represents the path of light travelling through spacetime from distant sources to an observer. In our context of galaxy surveys and cosmological simulations, a light cone catalogue allows us to mimic what a real telescope would observe: galaxies at different distances are seen at different cosmic times, since light from more distant galaxies has taken longer to reach us.
+\begin{figure*}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/lightcone/lightcone_slice_z_lfir.png}
+    \caption{Wedge diagram of the \textsc{simba} light cone showing comoving radial distance (Mpc) along the x-axis and comoving transverse distance (Mpc) along the y-axis. Each points represents an individual galaxy, coloured by its respective redshift.}
+    \label{fig:lcWedge}
+\end{figure*}
 
-Constructing a light cone from a simulation involves stitching together multiple simulation snapshots, each representing the universe at a specific redshift. Galaxies are selected from each snapshot based on their spatial position within a defined survey area (in angular coordinates RA and DEC) and assigned an observed redshift based on their line-of-sight distance. This approach captures the evolution of the galaxy population across cosmic time within a single catalogue, rather than treating each snapshot as an independent, instantaneous view of the universe.
+\Cref{fig:lcWedge} shows a 2D light cone wedge of \textsc{simba's} fiducial run containing 240,883 galaxies. The wedge shows the comoving volume per redshift interval with increasing distance, highlighting the characteristic geometry growing with a larger surface density of galaxies at larger radial distances. The discrete vertical banding is an artefact of the construction of the light cone, arising from a finite amount of snapshots being stitched together. The colour gradient traces the redshift evolution across the cone, highlighting the high number density of galaxies at cosmic noon ($z\sim2$) and gradual decrease towards higher $z$.
 
-The resulting light cone allows us to compute the necessary observable quantities such as the integrated cosmic background spectrum to form the respective SED for each electromagnetic spectrum component. By summing the flux contributions from all galaxies in the lightcone, each appropriately dimmed according to its luminosity distance, we obtain a prediction for the total EBL that would be measured by an observer. This is fundamentally different from summing galaxies at a single redshift, as it properly accounts for the fact that the galaxy population evolves with cosmic time and that more distant galaxies contribute less flux due to the inverse-square law and cosmological dimming.
 
-This was implemented by adapting the code Chris Lovell wrote in \cite{lovellChristopherSimba_lightcone_generation2021}. The first consideration was that snapshots 1-9 (above $z = 13$) have no halos, so there's no halo data, need to account for that by setting redshift range from 0 to 13 and then dropping files with higher redshift.
+cosmic variance and stuff we estimate using a jackknife error estimate 
 
-At $z \geq 0.5$, the 1 deg$^2$ survey area is larger than the simulation box (25 Mpc). So the selection mask fails because L - A is negative.
+\subsection{The Optical/NIR Regime}
 
-The original code contained hardcoded paths to the COSMA filesystem and assumed the \texttt{m100n1024} file naming convention. I updated these to point to my local Caesar catalogue directory and modified the file naming pattern from \texttt{m100n1024\_\{snap\}.hdf5} to \texttt{m25n256\_\{snap\}.hdf5}. Additionally, I removed the \texttt{sim\_directory} variable, which pointed to the raw simulation snapshots, as my analysis only requires the post-processed Caesar catalogues containing pre-computed galaxy properties.
+evolving sfr threshold
 
-The original code assumed specific unit conventions from the COSMA setup, using \texttt{Mpccm} (comoving Mpc) for positions. However, I found that the Caesar files I was working with used different unit conventions that were not always recognised by \texttt{astropy}. To address this, I implemented flexible unit handling that attempts multiple approaches:
+Using the light cone described in \cref{sec:lcConstruction} we estimate the optical/near-infrared (optical/NIR) cosmic background by integrating the observed flux from all simulated galaxies. Using effective wavelengths for discrete photometric bands in \textsc{fsps}, a sky averaged intensity $I_\nu$ is calculated as a function of observed wavelength. We plot two apparent magnitude variants: (i) including dust attenuation, and (ii) a no dust baseline comparison, both of which are computed via \textsc{caesar}. This was done to highlight the importance of dust consideration when plotting the optical regime and the impact Rayleigh scattering has on flux observations. 
 
-\begin{verbatim}
-try:
-    pos = g.pos.to('Mpc').value
-except:
-    try:
-        pos = g.pos.value
-    except:
-        pos = np.array(g.pos)
-\end{verbatim}
+The optical/NIR range itself is determined operationally by the set of available filters. Each filter is mapped to an effective wavelength $\lambda_{\mathrm{eff}}$ using the \textsc{fsps} database. This is required so that band integrated photometric points are on a common wavelength axis for unit conversion. 
 
-Similarly, for the simulation box size, I added logic to detect whether the value was stored in kpc or Mpc and convert accordingly.
+After $\lambda_{\mathrm{eff}}$ were determined the next step was to convert the apparent magnitudes stored in the \textsc{caesar} catalogues into a flux density. For each galaxy in the light cone, for each filter, the apparent magnitude, $m$, is converted to a flux density in the AB system via:
 
-During initial testing, I encountered a \texttt{KeyError} indicating that \texttt{'halo\_data'} did not exist in certain files. I found that this error occurred for snapshots 001--009, which correspond to redshifts $z > 13$. At these epochs, the universe had not yet formed sufficient structure for Caesar to identify any halos or galaxies, hence, these snapshots were skipped. The main light cone generation function then checks for these \texttt{None} returns and skips those snapshots with an informative message.
+\begin{equation}
+    f_\nu({\mathrm Jy}) = 3631 \times 10^{-m/2.5}.
+\end{equation}
+\noindent Next, for every galaxy appearing in the light cone, their flux densities are summed in each filter to get an integrated flux density, $F_\nu$. This accounts for any luminosity distance or K-corrections as we are using apparent magnitudes. We then further convert this to a mean specific intensity by dividing $F_\nu$ by the light cone solid angle,
 
-Finally, I converted the code from a command-line interface using \texttt{argparse} to an importable Python function. This allows for easier integration with the Jupyter notebooks that I am using.
+\begin{equation}
+    \Omega\ ({\mathrm sr}) = A\left(\frac{\pi}{180}\right)^2,
+    \label{eq:solidAngle}
+\end{equation}
 
-The core light cone generation algorithm was left the same and works as follows:
+\noindent where $A$ is sky area of the light cone defined earlier. This finally yields $I_\nu$ presented in units of $\mathrm{erg\ s^{-1}\ cm^{-2}\ Hz^{-1}}$ for each filter $\lambda_\mathrm{eff}$. Finally, $\nu I_\nu$ is calculate using $\nu =\frac{c}{\lambda_{\mathrm{eff}}}$ to show how much energy is contained within a given range of frequencies. It is particularly useful because it allows identification of which frequency band dominates the total energy emission (the peak of the plot represents the maximum power).
 
-\begin{itemize}
-\setlength\itemsep{0.5em}
-    \item Loops through snapshots sorted by redshift
-    \item Selects galaxies within a specified spatial region projected onto RA and DEC
-    \item Assigns observed redshifts based on each galaxy's $z$-coordinate combined with the comoving distance to the snapshot
-    \item Saves the resulting light cone to an HDF5 file containing galaxy indices, redshifts, positions, and stellar masses
-\end{itemize}
+Another consideration to be made is the star formation rate used 
 
-A light cone was generated for the $100$ Mpc/h volume with $1024^3$ gas and dark matter particles run of SIMBA which was then the basis for generating the EBL.
+this needs to be a lot more detailed in the method. for example havent included the explanation of using surviving star formation rate and to instead using formed mass fraction. 
+just need to fluff this out with more detail and explanations throughout of equations and more justifications of why decisions were made i think and specific stuff but i think optical just isn't that dense anyways
 
-\subsection{The Optical Regime}
+The entire process was done independently for the dust and no dust cases.
 
-\subsection{The Infrared Regime}
+
+\subsection{The Far Infrared Regime}
+
+we dont have a model for pahs and this requires radiative transfer which will be conducted in future work as it requires a full radiative processes code to be implemented such as powderday which we dont have the ability to do here right now.
+
+dust model uncertainty ($\beta$, a parameter)
+
+how to propogate uncertainty for $a$ into the graph or just quote it
+mid infrared is ignored because pahs and thats hard and didn't have time here
+the value of $a$ was found through a simple chi-square optimisation with the early access observational data provided by driver
+
+typically a radiative transfer code would be applied for modelling of dust, however, due to time constraints that is not possible here as need to work on the whole spectrum and not just dust. typically done radiative transfer eg powderday but not possible and we consider only far ir near is with optical and for mid ir u need radiative transfer and consider PAHs (explain what it is here) so we just leave it blank and is not considered here. far ir then is mostly just reemission from dust.
+--> feel this all should go in the introduction where i discuss each background and what makes it up
+
+The far infrared (far IR) cosmic background is estimated by integrating the redshifted thermal dust emission from simulated galaxies along the constructed light cone. It is dominated by dust remission and we see PAHs in mid IR but that is not considered here.
+
+Dust emission deviates from a perfect blackbody, being cooler and less efficient at shorter wavelengths, and so each galaxy's far IR SED is modelled as a single temperature modified blackbody (MBB), or greybody, in which the Planck function $B_\nu(T)$ is scaled by a frequency dependent emissivity power law. This formulation assumes the dust is optically thin ($\tau \ll 1$), meaning radiation passes through without significant absorption \parencite{hildebrandDeterminationCloudMasses1983}.
+
+Following \cite{caseyFarinfraredSpectralEnergy2012}, but in wavelength space via $\lambda = c/\nu$ (which introduces a factor of $\nu^2$ from the Jacobian), the rest frame optically thin MBB is
+
+\begin{equation}
+    S(\lambda) = N \cdot \left(\frac{100\,\mu\mathrm{m}}{\lambda}\right)^{\!\beta} 
+    \cdot \frac{2hc^2}{\lambda^5} \cdot \frac{1}{\exp\!\left(\dfrac{hc}{\lambda k_B T}
+    \right) - 1},
+    \label{eq:dustmbb}
+\end{equation}
+
+\noindent where $N$ is a normalisation constant, $\left(100\,\mu\mathrm{m}/\lambda\right)^\beta$ is the dust emissivity power law anchored at $100\,\mu\mathrm{m}$, and $\beta$ is the spectral emissivity index. The normalisation $N$ is set such that the integral of $S(\lambda)$ over wavelength equals the galaxy's bolometric far-IR luminosity $L_\mathrm{FIR}$ (the total energy absorbed by dust extinction) computed by \textsc{caesar}. This ensures that more luminous galaxies contribute proportionally more flux to the background, while $T$ and $\beta$ govern the spectral distribution of that luminosity \parencite{caseyFarinfraredSpectralEnergy2012}.
+
+An equivalent dust temperature $T_\mathrm{eqv}$ is assigned to each galaxy using the empirical relation calibrated against FIRE simulations by \cite{liangDustTemperaturesHighredshift2019},
+
+\begin{equation}
+    \log\left(\frac{T_\text{eqv}}{25\,\text{K}}\right) = a_{\mathrm{dust}} + 
+    b\log\!\left(\frac{\delta_\text{dzr}}{0.4}\right) + c\log(1+z),
+    \label{eq:equivalentDustTemp}
+\end{equation}
+
+\noindent where $b$ and $c$ are the best fitting regression parameters from that work, derived for a fixed $\beta = 2$ and an optically thin MBB evaluated at $870\,\mu\mathrm{m}$. $T_\mathrm{eqv}$ is not a resolved temperature distribution but a single effective temperature that, when paired with $L_\mathrm{FIR}$, reproduces the galaxy's far IR emission. The dust-to-metal ratio $\delta_\mathrm{dzr}$ is computed per galaxy as
+
+\begin{equation*}
+    \delta_{\mathrm{dzr}} = \frac{M_\mathrm{dust}}{Z \cdot M_{\mathrm{gasj}}},
+\end{equation*}
+
+\noindent where $M_\mathrm{dust}$, $Z$, and $M_\mathrm{gas}$ are taken directly from 
+the \textsc{caesar} catalogues \parencite{liDusttogasDusttometalRatio2019}. The 
+overall temperature scaling parameter $a_{\mathrm{dust}}$ is treated as a free parameter and determined by fitting the simulated SED to observational data. The far IR spectra are restricted to $50$--$3000\,\mu\mathrm{m}$ to exclude contamination from the optical/near-IR and radio regimes. Model predictions are interpolated onto the observed wavelength grid and $a_{\mathrm{dust}}$ is determined by minimising the $\chi^2$ statistic \parencite{jeyakumarContinuousOptimizationCurrent2006},
+
+\begin{equation}
+    \chi^2(a_{\mathrm{dust}})=\sum_i \left[\frac{M_i(a_{\mathrm{dust}})-D_i}
+    {\sigma_i}\right]^2,
+    \label{eq:continiousObjectiveFunction}
+\end{equation}
+
+\noindent where $D_i$ and $\sigma_i$ are the observed value and uncertainty at wavelength $\lambda_i$, and $M_i(a_{\mathrm{dust}})$ is the model prediction. Since $a_{\mathrm{dust}}$ is sampled on a discrete grid, a secondary interpolation is performed along $a_{\mathrm{dust}}$ to allow a bounded one dimensional minimiser to locate the best fitting value continuously. Goodness of fit is quantified via a reduced $\chi^2$. 
+
+Show plots of temp distribution and stuff here
+
+A logarithmic wavelength grid is adopted throughout to avoid undersampling at long wavelengths and oversampling at short wavelengths, appropriate for the broad spectral extent of dust emission.
+
+To account for redshift, the normalised SED is evaluated at the rest frame wavelength $\lambda_\mathrm{rest} = \lambda_\mathrm{obs}/(1+z)$, and the observed flux density is
+
+\begin{equation}
+    f_\lambda(\lambda_{\mathrm{obs}}) =
+    \frac{L_\lambda(\lambda_{\mathrm{rest}})}{4\pi d_L(z)^2 \cdot (1+z)},
+    \label{eq:luminosityDistanceRelation}
+\end{equation}
+
+\noindent where $d_L(z)$ is the luminosity distance and the factor of $(1+z)$ accounts for the stretching of wavelength bins between the rest and observed frames \parencite{hoggDistanceMeasuresCosmology2000,gabrielliStatisticalPhysicsCosmic2005}. The sky-averaged intensity is then obtained by dividing the total flux by the light cone solid angle, as defined in \cref{eq:solidAngle}.
+
+FIR for far IR
+\subsection{The Radio Regime}
+
+MORE BACKGROUDN HERE OF RADIO IS AGN + SF
+
+Synchrotron radiation is intense, polarized electromagnetic radiation emitted when charged particles (usually electrons) moving at relativistic speeds are accelerated along a curved path by magnetic fields
+
+For the radio emission background we consider a broad interval from 10 MHz to 100 GHz to account for contributions from a range of different processes. This includes low frequency synchrotron dominated emission, the 1.4 GHz point often quoted in literature for radio SFR and AGN contributions, and the high frequency end where thermal/free-free contributions become important. The frequency grid is again log scale for even sampling. The radio emission is hence considered firstly from contributions by star formation and secondly from AGN radio luminosity.
+
+Radio observations trace the SF within galaxies due to the synchrotron radiation emitted by relativistic electrons that arise from supernova and supernova remnants, as well as thermal bremsstrahlung (free-free radiation) from hot electrons in H II regions that is indicative of young hot stars \cite{thomasRadioGalaxyPopulation2021}. 
+
+Radio observations from star formation in galaxies are decomposed into two components: 
+non thermal synchrotron emission from cosmic ray electrons accelerated in supernova 
+remnants, and thermal bremsstrahlung (free-free) emission from ionised gas in HII regions \cite{condonRadioEmissionNormal1992}. The total radio luminosity is modelled following \cite{thomasRadioGalaxyPopulation2021} as $P_\nu = P_\mathrm{thermal} + P_\mathrm{non-thermal}$, where the two components are
+
+\begin{equation}
+P_{\mathrm{non\text{-}thermal}} (\mathrm{W\,Hz^{-1}})
+= 5.3 \times 10^{21}
+\left(\frac{\nu}{\mathrm{GHz}}\right)^{-0.8} 
+\times \mathrm{SFR}[M \geq 5\,M_\odot],
+\label{eq:nonThermalRadio}
+\end{equation}
+
+\begin{equation}
+P_{\mathrm{thermal}} (\mathrm{W\,Hz^{-1}})
+= 5.5 \times 10^{20}
+\left(\frac{\nu}{\mathrm{GHz}}\right)^{-0.1} 
+\times \mathrm{SFR}[M \geq 5\,M_\odot].
+\label{eq:thermalRadio}
+\end{equation}
+
+\noindent Both relations are expressed in terms of $\mathrm{SFR}[M \geq 5\,M_\odot]$, 
+which is the rate of mass going into stars more massive than $5\,M_\odot$, since only these 
+stars produce the supernovae and ionising photons that drive the radio emission. This is obtained from the total SFR stored by \textsc{caesar} via
+
+\begin{equation}
+    \mathrm{SFR}[M \geq 5\,M_\odot] = f_{M \geq 5} \times \mathrm{SFR_{total}},
+\end{equation}
+
+\noindent where $\mathrm{SFR_{total}}$ is taken directly from the \texttt{caesar} catalogues and $f_{M \geq 5}$ is the initial mass function (IMF) mass fraction above $5\,M_\odot$,
+
+\begin{equation}
+    f_{M \geq 5} = \frac{\int_{5}^{100}m\,\xi(m)\,\mathrm{d}m}{\int_{0.1}^{100}m\,\xi(m)\,\mathrm{d}m}.
+    \label{eq:chabrierMassFraction}
+\end{equation}
+
+\noindent $\xi(m)$ is the \cite{chabrierGalacticStellarSubstellar2003} IMF, 
+which takes the form of a power law above $1\,M_\odot$,
+
+\begin{equation}
+    \xi(m) = B\,m^{-2.3}, \quad m > 1\,M_\odot,
+    \label{eq:chabrierPowerLaw}
+\end{equation}
+
+\noindent and a log-normal distribution below $1\,M_\odot$,
+
+\begin{equation}
+    \xi(m) = \frac{A}{m}\exp{\left(-\frac{(\log_{10}m - \log_{10}0.08)^2}
+    {2 \times 0.69^2}\right)}, \quad m \leq 1\,M_\odot.
+    \label{eq:chabrierLogNormal}
+\end{equation}
+
+\noindent The constants $A$ and $B$ are chosen to ensure continuity at $1\,M_\odot$ and normalisation over the full mass range. Since the log-normal form has no analytic integral, the denominator of \cref{eq:chabrierMassFraction} is evaluated numerically. The dependence on high mass stars of the radio luminosity calibration stems from their ionising photon production which drives bremsstrahlung, and they typically end their lives as core collapse supernovae which produce the synchrotron radiation observed \cite{shenoyWhatFactorsShape2026,bietenholzRadioLuminosityrisetimeFunction2021}.
+
+While star formation can dominate the radio output of typical main sequence galaxies, AGN can dominate the radio emission for a subset of objects (especially at the bright end and for radio-loud systems) \parencite{pass}.
+
+The AGN contribution to the radio background is computed from the black hole accretion rates of individual galaxies in the \textsc{simba} simulation. For each galaxy, the bolometric radio power is derived from the black hole accretion rate as presented in \cite{kordingMeasuringAccretionRate2007},
+
+\begin{equation}
+    \frac{P_\mathrm{Rad}}{10^{30}\mathrm{erg}\text{ }\mathrm{s^{-1}}} = \left(\frac{\dot{M}_{BH}}{4\times10^{17}\mathrm{g}\text{ }\mathrm{s^{-1}}}\right)^\frac{17}{12},
+    \label{agnRadioEmission}
+\end{equation}
+
+\noindent where $\dot{M}_{\mathrm{BH}}$ is the accretion rate of the most massive black hole in each galaxy as catalogued by \textsc{caesar}. Since the bolometric radio power represents the monochromatic luminosity $P_{\mathrm{Rad}} \sim \nu P_\nu$ evaluated at 1.4 GHz, the spectral luminosity is obtained by normalising as $P_\nu(1.4\;\mathrm{GHz}) = P_{\mathrm{Rad}} / \nu_{\mathrm{ref}}$, where $\nu_{\mathrm{ref}} = 1.4\;\mathrm{GHz}$. To evaluate the AGN radio emission across a frequency range (as was done for star formation), we assume a power-law spectral energy distribution of the form
+
+\begin{equation}
+    P_\nu(\nu) = P_\nu(1.4\;\mathrm{GHz})\,(\nu / 1.4\;\mathrm{GHz})^{-\alpha},
+\end{equation}
+
+\noindent adopting a spectral index of $\alpha = 0.7$ characteristic of radio loud AGN jets \parencite{thomasRadioGalaxyPopulation2021,angladaRadioJetsYoung2018}. The contribution of each galaxy to the observed specific intensity is then computed by evaluating $P_\nu$ at the rest frame frequency $\nu_{\mathrm{rest}} = \nu_{\mathrm{obs}}(1+z)$ and converting to observed flux density using \cref{eq:luminosityDistanceRelation} in frequency space. The AGN flux contributions from all galaxies in the lightcone are summed and divided by the survey solid angle in \cref{eq:solidAngle} to obtain the AGN component of the radio specific intensity as a function of observed frequency.
+
+%$F_\nu = (1+z)\,P_\nu(\nu_{\mathrm{rest}}) / (4\pi d_L^2)$, where $d_L$ is the luminosity distance. 
+
+\subsection{Uncertainty Estimation}
+
+One factor not considered so far are the implications of sources of uncertainty. The SED itself is derived from a finite sample, the construction of the light cone introduces a sampling variance from the inherent cosmic variance of the universe and hence a measure of statistical uncertainty is required. We implement the jackknife resampling method \parencite{bergerJackknifeVarianceEstimator2007} by dividing our light cone into 16 quadrants using RA/DEC quantile bins. For each realisation $k$ (0-15), we exclude the $k^{\mathrm{th}}$ quadrant and recompute the full SED background in each one to then calculate a mean and variance,
+
+\begin{equation}
+    \sigma^2 = \frac{N-1}{N} \sum (x_k-\bar{x})^2,
+\end{equation}
+
+\noindent where . Here we have assumed the independent sub samples are independent of each other, we have not accounted for any systemic uncertainty, and we are limited with the number of quadrants by simulation volume. These uncertainties are applied to each SED in the respective wavelength bins.
+ 
+\section{Results \& Discussion}
+
+errors, binned plots, light cone plots
+
+present main big graph and then talk about each individually, and then present the binned graphs and talk about where what dominates; weaving in discussion/evaluation throughout the report.
+
+The cosmic spectral energy distribution exhibits two dominant peaks. The optical and ultraviolet emission arises primarily from stellar populations within galaxies, particularly young massive stars that emit strongly at short wavelengths. A second peak in the far-infrared results from interstellar dust grains absorbing ultraviolet and optical radiation and re-emitting this energy thermally. At longer wavelengths in the radio regime, emission is produced through a combination of synchrotron radiation from supernova remnants, free–free emission from ionised gas in HII regions, and radio jets associated with active galactic nuclei.
+
+binned redshift plots 
+
+\subsection{The Optical/NIR Regime}
+
+maybe its just coming from skipped snaps cause they're cooked
+
+optical/near IR should be really good because the imf and other stuff is reproduced really really well by simba.
+
+\subsection{The Far Infrared Regime}
+Each galaxy is approximated by one effective dust temperature and a single $\beta$. Real galaxies host multiple dust components; this approach captures broad behaviour but may miss detailed mid‑IR structure and temperature mixing.
+
+The absolute energy budget is set by the simulation’s $L_\mathrm{FIR}$ definition.
+
+No explicit CMB heating or line emission: The continuum MBB model does not include spectral lines cite \cite{desertInterstellarDustEmission2022} for this
+
+missing snapshots or missing $L_\mathrm{FIR}$ for some snapshots this would underestimate the far IR luminosity.
 
 \subsection{The Radio Regime}
 
-Provide detailed descriptions of:
 
-\subsection{Computational Algorithms}
-Explain the mathematical basis and implementation details of algorithms used. 
-Include any numerical techniques, optimization methods, or statistical approaches 
-specific to your work.
+problems with doing them individually and summing i think
 
-\subsection{Data Processing}
-Describe data sources, preprocessing steps, and any calibration procedures. 
-For observational data, detail reduction methods and quality criteria.
+\subsection{Errors}
 
-\subsection{Software Implementation}
-Include information about programming languages, key libraries, and performance 
-considerations. Code snippets can be included for novel algorithms:
+- cosmic variance
+-jack knife for light cone
 
-Standard techniques need not be detailed; reference established methods instead.
 
-\section{Results \& Discussion}
-
-Present results clearly using figures and tables. Include:
-\begin{itemize}
-    \item Numerical results with appropriate uncertainties
-    \item Comparison with theoretical predictions
-    \item Systematic error analysis
-    \item Validation of computational methods
-\end{itemize}
-
-\begin{figure}[htb]
-        \begin{center}
-        \includegraphics[width=\linewidth]{example_plot.pdf}
-        \end{center}
-    \caption{Include descriptive captions explaining axes, units, error bars, 
-    and line meanings. For multi-panel figures, label each panel clearly.}
-\end{figure}
-
-Discuss implications for exoplanet characterization and detection methods.
-
-\section{Conclusion}
+\section{Conclusions}
 
 use full radiative transfer code for the dust and far IR emission
 
 \section*{Acknowledgements}
-
-Acknowledge funding sources, computational resources, and collaborators as appropriate.
+caesar thank you, eric tittley for cuillin, simon driver, romeel 
 
 %%% References %%%
 \renewcommand{\refname}{References}

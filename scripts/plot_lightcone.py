@@ -119,6 +119,46 @@ def load_lfir(data):
 
     return lfir
 
+def load_appmag_v(data):
+    """
+    Cross-reference snapshot catalogues to retrieve per-galaxy apparent magnitude in the 'v' filter.
+
+    Returns an array of apparent magnitudes (same length as the lightcone).
+    Galaxies for which appmag.v is unavailable are set to NaN.
+    """
+    n_gal = len(data["z"])
+    appmag_v = np.full(n_gal, np.nan)
+
+    snap_arr = data["snap"]
+    gal_idx = data["galaxy_index"]
+    key_name = "appmag.v"
+
+    cache = {}
+    for snap in np.unique(snap_arr):
+        snap = int(snap)
+        hdf5 = HDF5_DIR / f"{SNAP_PREFIX}_{snap:03d}.hdf5"
+        if not hdf5.exists():
+            hdf5 = HDF5_DIR / f"{SNAP_PREFIX}_{snap}.hdf5"
+        if not hdf5.exists():
+            print(f"  WARN: missing {hdf5}, skipping snap {snap}")
+            continue
+        with h5py.File(hdf5, "r") as f:
+            group = f["galaxy_data/dicts"]
+            if key_name not in group:
+                print(f"  WARN: {key_name} missing in snap {snap}, skipping")
+                continue
+            cache[snap] = group[key_name][:]
+
+    for i in range(n_gal):
+        s = int(snap_arr[i])
+        gi = int(gal_idx[i])
+        if s in cache and gi < len(cache[s]):
+            val = cache[s][gi]
+            if np.isfinite(val):
+                appmag_v[i] = val
+
+    return appmag_v
+
 def plot_lightcone_slice_appmag(data, app_mag, outpath, absmag_key="absmag.g"):
     """
     2D light-cone slice colored by apparent magnitude.
@@ -150,56 +190,117 @@ def plot_lightcone_slice_appmag(data, app_mag, outpath, absmag_key="absmag.g"):
     plt.close(fig)
     print(f"Saved: {outpath}")
 
-# ── Plot 2: 2-D light-cone slice ────────────────────────────────────────
-def plot_lightcone_slice(data, lfir, outpath):
+def plot_two_panel_wedge_with_redshift(data, appmag_v, lfir, outpath, random_seed=42, max_points=100000):
     """
-    Two-panel 2-D light-cone slice (comoving radial vs transverse distance).
+    Create a two-panel wedge diagram for the SIMBA light cone.
+    Panel 1: v-band apparent magnitude (optical)
+    Panel 2: log10(L_FIR / L_sun) (far-IR)
+    Both panels: x-axis is comoving radial distance [Mpc], secondary x-axis is redshift.
+    """
+    plt.style.use('dark_background')
 
-    Left  panel: points coloured by redshift.
-    Right panel: points coloured by L_FIR (galaxies without L_FIR are grey).
-    """
+    # Geometry
     z = data["z"]
     ra = data["ra"]
-
     d_radial = cosmo.comoving_distance(z).to("Mpc").value
     ra_centre = np.median(ra)
     delta_ra_rad = np.deg2rad(ra - ra_centre)
     d_transverse = delta_ra_rad * d_radial
 
-    y_lim = np.nanpercentile(np.abs(d_transverse), 99.5)
+    n_gal = len(z)
+    rng = np.random.default_rng(random_seed)
+    idx = rng.choice(n_gal, size=min(max_points, n_gal), replace=False)
 
-    fig, axes = plt.subplots(1, 1, figsize=(16, 6))
+    # Subsampled arrays
+    d_radial_sub = d_radial[idx]
+    d_transverse_sub = d_transverse[idx]
+    appmag_v_sub = appmag_v[idx]
+    lfir_sub = lfir[idx]
+    z_sub = z[idx]
 
-    # ── left: coloured by redshift ───────────────────────────────────────
-    im0 = axes.scatter(
-        d_radial, d_transverse, s=0.5, alpha=0.6,
-        c=z, cmap="plasma", vmin=0, vmax=z.max(),
-        rasterized=True,
-    )
-    cb0 = fig.colorbar(im0, ax=axes, pad=0.02)
-    cb0.set_label("Redshift $z$", fontsize=11)
-    axes.set_xlabel("Comoving radial distance [Mpc]", fontsize=11)
-    axes.set_ylabel("Comoving transverse distance [Mpc]", fontsize=11)
-    axes.set_ylim(-y_lim, y_lim)
-    axes.set_title("Number of Galaxies Coloured by Redshift", fontsize=12)
+    # Panel 1: v-band apparent magnitude
+    vmin_v = np.nanpercentile(appmag_v_sub, 1)
+    vmax_v = np.nanpercentile(appmag_v_sub, 99)
 
+    # Panel 2: log10(L_FIR / L_sun)
+    lfir_log = np.log10(lfir_sub)
+    lfir_log[~np.isfinite(lfir_log)] = np.nan
+    vmin_lfir = np.nanpercentile(lfir_log, 2)
+    vmax_lfir = np.nanpercentile(lfir_log, 98)
+
+    # Shared axis limits
+    y_lim = np.nanpercentile(np.abs(d_transverse_sub), 99.5)
+    x_lim = [np.nanmin(d_radial_sub), np.nanmax(d_radial_sub)]
+
+    fig, axes = plt.subplots(2, 1, figsize=(10, 10), sharex=True, sharey=True)
+    panels = [
+        {
+            "c": appmag_v_sub,
+            "cmap": "viridis_r",
+            "vmin": vmin_v,
+            "vmax": vmax_v,
+            "label": "v-band apparent magnitude",
+            "panel_label": "(a)"
+        },
+        {
+            "c": lfir_log,
+            "cmap": "inferno",
+            "vmin": vmin_lfir,
+            "vmax": vmax_lfir,
+            "label": r"$\log_{10}(L_\mathrm{FIR} / L_\odot)$",
+            "panel_label": "(b)"
+        }
+    ]
+
+    for i, ax in enumerate(axes):
+        im = ax.scatter(
+            d_radial_sub, d_transverse_sub, s=0.5, alpha=0.3,
+            c=panels[i]["c"], cmap=panels[i]["cmap"],
+            vmin=panels[i]["vmin"], vmax=panels[i]["vmax"],
+            rasterized=True
+        )
+        cb = fig.colorbar(im, ax=ax, pad=0.02)
+        cb.set_label(panels[i]["label"], fontsize=11)
+        ax.set_ylim(-y_lim, y_lim)
+        ax.set_xlim(x_lim)
+        ax.text(0.01, 0.95, panels[i]["panel_label"], transform=ax.transAxes,
+                fontsize=14, fontweight="bold", va="top", ha="left")
+        if i == 0:
+            ax.set_ylabel("Comoving transverse distance [Mpc]", fontsize=12)
+        if i == 1:
+            ax.set_xlabel("Comoving radial distance [Mpc]", fontsize=12)
+            # Add secondary x-axis for redshift
+            secax = ax.secondary_xaxis('top')
+            # Map comoving distance to redshift using interpolation
+            sorted_idx = np.argsort(d_radial)
+            d_radial_sorted = d_radial[sorted_idx]
+            z_sorted = z[sorted_idx]
+            def comoving_to_z(x):
+                return np.interp(x, d_radial_sorted, z_sorted)
+            def z_to_comoving(zval):
+                return np.interp(zval, z_sorted, d_radial_sorted)
+            
+            secax.set_functions((comoving_to_z, z_to_comoving))
+            secax.set_xlabel("Redshift $z$", fontsize=12)
+            secax.set_xlim(x_lim)
+            z_ticks = [0.5, 1, 2, 3, 4, 5, 6, 7]
+            comoving_ticks = [z_to_comoving(z) for z in z_ticks]
+            secax.set_xticks(comoving_ticks)
+            secax.set_xticklabels([f"{z:.1f}" for z in z_ticks])
+            
     fig.suptitle(
-        f"SIMBA light cone 2-D slice  "
-        f"($N_{{\\mathrm{{gal}}}} = {len(z):,}$)",
-        fontsize=14,
+        f"SIMBA light cone — $N_\\text{{gal}} = {n_gal:,}$",
+        fontsize=16, y=0.98
     )
-    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
     fig.savefig(outpath, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved: {outpath}")
 
-# ─────────────────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    data = load_lightcone(LC_FILE)
-    print("Loading apparent magnitude from snapshot catalogues …")
-    app_mag = load_app_mag(data, filter_name="g")  # or "r", "i", etc.
-    plot_lightcone_slice_appmag(
-        data, app_mag,
-        FIG_DIR / "lightcone_slice_appmag_g.png",
-        absmag_key="appmag.g"
-    )
+data = load_lightcone(LC_FILE)
+appmag_v = load_appmag_v(data)
+lfir = load_lfir(data)
+plot_two_panel_wedge_with_redshift(
+    data, appmag_v, lfir,
+    FIG_DIR / "lightcone_wedge_two_panel.png"
+)

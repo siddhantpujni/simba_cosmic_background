@@ -31,7 +31,6 @@ from src.backgrounds.farIR import lightcone_farIR_background
 CGS_TO_NW_M2 = 1e6   # 1 erg/s/cm² → 1e6 nW/m²
 FLOOR = 1e-6         # nW/m²/sr  – plotting noise floor
 
-
 def _to_nW(nuInu):
     """erg/s/cm²/sr  →  nW/m²/sr, NaN below noise floor."""
     v = nuInu * CGS_TO_NW_M2

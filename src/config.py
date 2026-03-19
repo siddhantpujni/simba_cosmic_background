@@ -33,7 +33,7 @@ class SimConfig:
         return self.hdf5_dir / f"{self.snapshot_prefix}_{snap}.hdf5"
 
 
-def load_config(sim_name: str = "m25n256") -> SimConfig:
+def load_config(sim_name: str = "m100n1024") -> SimConfig:
     """Load a simulation config by name."""
     cfg_path = CONFIG_DIR / f"{sim_name}.yaml"
     if not cfg_path.exists():

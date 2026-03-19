@@ -24,8 +24,88 @@ def _redshift_for_snap(cfg, snap):
         return get_redshift(obj)
     raise FileNotFoundError(f"Cannot get redshift for snap {snap}")
 
+def save_radio_flux_per_galaxy_1p4GHz(cfg, area_deg2=0.5, z_min=0.0, z_max=7.0, galaxy_mask=None):
+    """
+    Compute and save the summed (SF+AGN) radio flux per galaxy at 1.4 GHz observed frequency.
+    Output: HDF5 file in data/results/radio_flux_1p4GHz_<simname>.h5
+    """
+    import os
+    results_dir = Path(__file__).resolve().parent.parent.parent / "data" / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    outpath = results_dir / f"radio_flux_1p4GHz_{cfg.name}.h5"
 
-def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
+    lc_path = build_lightcone(cfg, area_deg2, z_min, z_max)
+    with h5py.File(lc_path, "r") as lc:
+        gal_z    = lc["z"][:]
+        snap_arr = lc["snap"][:]
+        gal_idx  = lc["galaxy_index"][:]
+
+    if galaxy_mask is not None:
+        galaxy_mask = np.asarray(galaxy_mask)
+        if len(galaxy_mask) != len(gal_z):
+            raise ValueError("galaxy_mask length mismatch")
+    else:
+        galaxy_mask = np.ones(len(gal_z), dtype=bool)
+
+    nu_obs = 1.4e9  # Hz
+    n_gal = len(gal_z)
+    flux_sf_arr = np.full(n_gal, np.nan)
+    flux_agn_arr = np.full(n_gal, np.nan)
+    flux_total_arr = np.full(n_gal, np.nan)
+    cache = {}
+
+    unique_snaps = np.unique(snap_arr)
+    for snap in unique_snaps:
+        snap = int(snap)
+        smask = (snap_arr == snap) & galaxy_mask
+        if not np.any(smask):
+            continue
+        if snap not in cache:
+            hdf5 = cfg.hdf5_path(snap)
+            if not hdf5.exists():
+                print(f"  WARN: missing {hdf5}, skipping snap {snap}")
+                continue
+            with h5py.File(hdf5, "r") as f:
+                if "galaxy_data/sfr" not in f:
+                    print(f"  WARN: SFR missing in snap {snap}, skipping")
+                    continue
+                sfr = f["galaxy_data/sfr"][:]
+                bhmdot = f["galaxy_data/bhmdot"][:] if "galaxy_data/bhmdot" in f else np.zeros_like(sfr)
+            cache[snap] = (sfr, bhmdot)
+        sfr, bhmdot = cache[snap]
+        for i, (gi, gz) in enumerate(zip(gal_idx[smask], gal_z[smask])):
+            gi = int(gi)
+            if gi >= len(sfr):
+                continue
+            sfr_gal = sfr[gi]
+            bhmdot_gal = bhmdot[gi]
+            nu_rest_ghz = nu_obs * (1.0 + gz) / 1e9
+            d_L = cfg.cosmology.luminosity_distance(gz).to(u.cm).value
+            prefactor = (1.0 + gz) / (4.0 * np.pi * d_L ** 2)
+            flux_sf = 0.0
+            flux_agn = 0.0
+            if np.isfinite(sfr_gal) and sfr_gal > 0:
+                P_nu_sf = radio_luminosity_sf(sfr_gal, nu_rest_ghz)  # W/Hz
+                P_nu_sf_cgs = P_nu_sf * 1e7  # erg/s/Hz
+                flux_sf = prefactor * P_nu_sf_cgs
+            if np.isfinite(bhmdot_gal) and bhmdot_gal > 0:
+                P_agn = agn_radio_luminosity(bhmdot_gal, nu_rest_ghz)  # erg/s/Hz
+                flux_agn = prefactor * P_agn
+            idx = np.where(smask)[0][i]
+            flux_sf_arr[idx] = flux_sf
+            flux_agn_arr[idx] = flux_agn
+            flux_total_arr[idx] = flux_sf + flux_agn
+
+    with h5py.File(outpath, "w") as f:
+        f.create_dataset("flux_total", data=flux_total_arr)
+        f.create_dataset("flux_sf", data=flux_sf_arr)
+        f.create_dataset("flux_agn", data=flux_agn_arr)
+        f.create_dataset("z", data=gal_z)
+        f.create_dataset("snap", data=snap_arr)
+        f.create_dataset("galaxy_index", data=gal_idx)
+    print(f"Saved per-galaxy 1.4 GHz radio fluxes to {outpath}")
+
+def build_lightcone(cfg, area_deg2=0.5, z_min=0.0, z_max=7.0):
     """Generate or load a cached lightcone."""
     LIGHTCONE_DIR.mkdir(parents=True, exist_ok=True)
     lc_path = LIGHTCONE_DIR / f"lc_{cfg.name}_a{area_deg2}_z{z_min}-{z_max}.h5"
@@ -35,8 +115,7 @@ def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
     generate_lightcone(cfg, area_deg2, z_min, z_max, lc_path, verbose=True)
     return lc_path
 
-
-def lightcone_radio_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
+def lightcone_radio_background(cfg, area_deg2=0.5, z_min=0.0, z_max=7.0,
                                 n_points=500, galaxy_mask=None):
     """
     Compute the radio cosmic background intensity from star formation

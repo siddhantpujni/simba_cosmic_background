@@ -190,12 +190,16 @@ def plot_lightcone_slice_appmag(data, app_mag, outpath, absmag_key="absmag.g"):
     plt.close(fig)
     print(f"Saved: {outpath}")
 
-def plot_two_panel_wedge_with_redshift(data, appmag_v, lfir, outpath, random_seed=42, max_points=100000):
+with h5py.File(ROOT / "data" / "results" / "radio_flux_1p4GHz_m100n1024.h5", "r") as f:
+    radio_flux = f["flux_total"][:]
+
+def plot_three_panel_wedge_with_radio(data, appmag_v, lfir, radio_flux, outpath, random_seed=42, max_points=240000):
     """
-    Create a two-panel wedge diagram for the SIMBA light cone.
+    Three-panel wedge diagram for the SIMBA light cone.
     Panel 1: v-band apparent magnitude (optical)
     Panel 2: log10(L_FIR / L_sun) (far-IR)
-    Both panels: x-axis is comoving radial distance [Mpc], secondary x-axis is redshift.
+    Panel 3: log10(radio flux at 1.4 GHz) [erg/s/cm^2/Hz]
+    All: x-axis is comoving radial distance [Mpc], y is transverse.
     """
     plt.style.use('dark_background')
 
@@ -216,23 +220,31 @@ def plot_two_panel_wedge_with_redshift(data, appmag_v, lfir, outpath, random_see
     d_transverse_sub = d_transverse[idx]
     appmag_v_sub = appmag_v[idx]
     lfir_sub = lfir[idx]
+    radio_flux_sub = radio_flux[idx]
     z_sub = z[idx]
 
     # Panel 1: v-band apparent magnitude
     vmin_v = np.nanpercentile(appmag_v_sub, 1)
     vmax_v = np.nanpercentile(appmag_v_sub, 99)
 
-    # Panel 2: log10(L_FIR / L_sun)
-    lfir_log = np.log10(lfir_sub)
+    # Panel 2: log10(L_FIR / L_sun) 
+    lfir_log = np.log10(lfir)
     lfir_log[~np.isfinite(lfir_log)] = np.nan
-    vmin_lfir = np.nanpercentile(lfir_log, 2)
-    vmax_lfir = np.nanpercentile(lfir_log, 98)
+    lfir_log_sub = lfir_log[idx]
+    vmin_lfir = np.nanpercentile(lfir_log_sub, 2)
+    vmax_lfir = np.nanpercentile(lfir_log_sub, 98)
+
+    # Panel 3: log10(radio flux)
+    radio_log = np.log10(radio_flux_sub)
+    radio_log[~np.isfinite(radio_log)] = np.nan
+    vmin_radio = np.nanpercentile(radio_log, 2)
+    vmax_radio = np.nanpercentile(radio_log, 98)
 
     # Shared axis limits
     y_lim = np.nanpercentile(np.abs(d_transverse_sub), 99.5)
     x_lim = [np.nanmin(d_radial_sub), np.nanmax(d_radial_sub)]
 
-    fig, axes = plt.subplots(2, 1, figsize=(10, 10), sharex=True, sharey=True)
+    fig, axes = plt.subplots(3, 1, figsize=(10, 15), sharex=True, sharey=True)
     panels = [
         {
             "c": appmag_v_sub,
@@ -243,12 +255,20 @@ def plot_two_panel_wedge_with_redshift(data, appmag_v, lfir, outpath, random_see
             "panel_label": "(a)"
         },
         {
-            "c": lfir_log,
+            "c": lfir_log_sub,
             "cmap": "inferno",
             "vmin": vmin_lfir,
             "vmax": vmax_lfir,
             "label": r"$\log_{10}(L_\mathrm{FIR} / L_\odot)$",
             "panel_label": "(b)"
+        },
+        {
+            "c": radio_log,
+            "cmap": "plasma",
+            "vmin": vmin_radio,
+            "vmax": vmax_radio,
+            "label": r"$\log_{10}($Radio flux at 1.4 GHz$)$ [erg s$^{-1}$ cm$^{-2}$ Hz$^{-1}$]",
+            "panel_label": "(c)"
         }
     ]
 
@@ -265,29 +285,11 @@ def plot_two_panel_wedge_with_redshift(data, appmag_v, lfir, outpath, random_see
         ax.set_xlim(x_lim)
         ax.text(0.01, 0.95, panels[i]["panel_label"], transform=ax.transAxes,
                 fontsize=14, fontweight="bold", va="top", ha="left")
-        if i == 0:
-            ax.set_ylabel("Comoving transverse distance [Mpc]", fontsize=12)
-        if i == 1:
+        if i == 2:
             ax.set_xlabel("Comoving radial distance [Mpc]", fontsize=12)
-            # Add secondary x-axis for redshift
-            secax = ax.secondary_xaxis('top')
-            # Map comoving distance to redshift using interpolation
-            sorted_idx = np.argsort(d_radial)
-            d_radial_sorted = d_radial[sorted_idx]
-            z_sorted = z[sorted_idx]
-            def comoving_to_z(x):
-                return np.interp(x, d_radial_sorted, z_sorted)
-            def z_to_comoving(zval):
-                return np.interp(zval, z_sorted, d_radial_sorted)
-            
-            secax.set_functions((comoving_to_z, z_to_comoving))
-            secax.set_xlabel("Redshift $z$", fontsize=12)
-            secax.set_xlim(x_lim)
-            z_ticks = [0.5, 1, 2, 3, 4, 5, 6, 7]
-            comoving_ticks = [z_to_comoving(z) for z in z_ticks]
-            secax.set_xticks(comoving_ticks)
-            secax.set_xticklabels([f"{z:.1f}" for z in z_ticks])
-            
+        if i == 1:
+            ax.set_ylabel("Comoving transverse distance [Mpc]", fontsize=12)
+
     fig.suptitle(
         f"SIMBA light cone — $N_\\text{{gal}} = {n_gal:,}$",
         fontsize=16, y=0.98
@@ -297,10 +299,15 @@ def plot_two_panel_wedge_with_redshift(data, appmag_v, lfir, outpath, random_see
     plt.close(fig)
     print(f"Saved: {outpath}")
 
+# --- Usage ---
 data = load_lightcone(LC_FILE)
 appmag_v = load_appmag_v(data)
 lfir = load_lfir(data)
-plot_two_panel_wedge_with_redshift(
-    data, appmag_v, lfir,
-    FIG_DIR / "lightcone_wedge_two_panel.png"
+with h5py.File(ROOT / "data" / "results" / "radio_flux_1p4GHz_m100n1024.h5", "r") as f:
+    radio_flux = f["flux_total"][:]
+
+plot_three_panel_wedge_with_radio(
+    data, appmag_v, lfir, radio_flux,
+    FIG_DIR / "lightcone_wedge_three_panel.png"
 )
+

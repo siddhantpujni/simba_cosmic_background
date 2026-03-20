@@ -101,15 +101,12 @@ The resulting light cone allows us to compute the necessary observable quantitie
 
 \begin{figure*}
     \centering
-    \includegraphics[width=\linewidth]{figures/lightcone/lightcone_slice_z_lfir.png}
-    \caption{Wedge diagram of the \textsc{simba} light cone showing comoving radial distance (Mpc) along the x-axis and comoving transverse distance (Mpc) along the y-axis. Each points represents an individual galaxy, coloured by its respective redshift.}
+    \includegraphics[width=\linewidth]{figures/lightcone/lightcone_wedge_three_panel.png}
+    \caption{Wedge diagram of the \textsc{simba} light cone showing comoving radial distance (Mpc) along the x-axis and comoving transverse distance (Mpc) along the y-axis. Each points represents an individual galaxy. (a) is optical coloured by v-band apparent magnitude, (b) is far IR emission coloured by infrared luminosity L_fir, and (c) is coloured by 1.4GHz radio emission.}
     \label{fig:lcWedge}
 \end{figure*}
 
-\Cref{fig:lcWedge} shows a 2D light cone wedge of \textsc{simba's} fiducial run containing 240,883 galaxies. The wedge shows the comoving volume per redshift interval with increasing distance, highlighting the characteristic geometry growing with a larger surface density of galaxies at larger radial distances. The discrete vertical banding is an artefact of the construction of the light cone, arising from a finite amount of snapshots being stitched together. The colour gradient traces the redshift evolution across the cone, highlighting the high number density of galaxies at cosmic noon ($z\sim2$) and gradual decrease towards higher $z$.
-
-
-cosmic variance and stuff we estimate using a jackknife error estimate 
+\Cref{fig:lcWedge} shows a 2D light cone wedge of \textsc{simba's} fiducial run containing 240,883 galaxies. The wedge shows the comoving volume per redshift interval with increasing distance, highlighting the characteristic geometry growing with a larger surface density of galaxies at larger radial distances. The discrete vertical banding is an artefact of the construction of the light cone, arising from a finite amount of snapshots being stitched together. The colour gradients across the three wedges trace the contribution evolution across the cone expand here.
 
 \subsection{The Optical/NIR Regime}
 
@@ -129,7 +126,7 @@ After $\lambda_{\mathrm{eff}}$ were determined the next step was to convert the 
     \label{eq:solidAngle}
 \end{equation}
 
-\noindent where $A$ is sky area of the light cone defined earlier. This finally yields $I_\nu$ presented in units of $\mathrm{erg\ s^{-1}\ cm^{-2}\ Hz^{-1}}$ for each filter $\lambda_\mathrm{eff}$. Finally, $\nu I_\nu$ is calculate using $\nu =\frac{c}{\lambda_{\mathrm{eff}}}$ to show how much energy is contained within a given range of frequencies. It is particularly useful because it allows identification of which frequency band dominates the total energy emission (the peak of the plot represents the maximum power).
+\noindent where $A$ is sky area of the light cone defined earlier. This yields $I_\nu$ presented in units of $\mathrm{erg\ s^{-1}\ cm^{-2}\ Hz^{-1}}$ for each filter $\lambda_\mathrm{eff}$. Finally, $\nu I_\nu$ is calculated using $\nu =\frac{c}{\lambda_{\mathrm{eff}}}$ to show how much energy is contained within a given range of frequencies. It is particularly useful because it allows identification of which frequency band dominates the total energy emission (the peak of the plot represents the maximum power).
 
 Another consideration to be made is the star formation rate used 
 
@@ -184,11 +181,11 @@ overall temperature scaling parameter $a_{\mathrm{dust}}$ is treated as a free p
 
 \noindent where $D_i$ and $\sigma_i$ are the observed value and uncertainty at wavelength $\lambda_i$, and $M_i(a_{\mathrm{dust}})$ is the model prediction. Since $a_{\mathrm{dust}}$ is sampled on a discrete grid, a secondary interpolation is performed along $a_{\mathrm{dust}}$ to allow a bounded one dimensional minimiser to locate the best fitting value continuously. Goodness of fit is quantified via a reduced $\chi^2$. 
 
-We present diagnostic plots of the temperature from the fitting of $a_{\mathrm{dust}}$ in \cref{fig:tempDiagnostic}to highlight the spread of different possible temperature that the different $a_{\mathrm{dust}}$ values give. We plot the best fitting value with 50$\sigma$ either side to show a reasonable spread otherwise you can not really see anything. The observational EBL data is also plotted to show the differences in the fits.
+We present diagnostic plots of the temperature from the fitting of $a_{\mathrm{dust}}$ in \cref{fig:tempDiagnostic}to highlight the spread of different possible temperature that the different $a_{\mathrm{dust}}$ values give. We plot the best fitting value with 50$\sigma$ either side to show a reasonable spread otherwise you can not really see anything. The observational EBL data is also plotted to show the differences in the fits. mean dust temp of the local universe is expected to be low around 30K ish but when you go out to higher redshifts this temperature increases which is why we have this high median (cite that paper i sent romeel here) however we do see the lower temps shown by the histogram as well and that they are accoutned for. at higher redshfit closer to cosmic noon we have more active galaxies and so more sf and younger stars so hotter as go farther out
 
 \begin{figure*}
     \centering
-    \includegraphics[width\linewidth]{figures/farIR/farIR_bg_m100n1024_diagnostic.png}
+    \includegraphics[width=0.7\linewidth]{figures/farIR/farIR_bg_m100n1024_diagnostic.png}
     \caption{Central value of $a_{\mathrm{dust}} = -0.0173(6)$ is best fitting value}
     \label{fig:tempDiagnostic}
 \end{figure*}
@@ -203,11 +200,9 @@ To account for redshift, the normalised SED is evaluated at the rest frame wavel
     \label{eq:luminosityDistanceRelation}
 \end{equation}
 
-\noindent where $d_L(z)$ is the luminosity distance and the factor of $(1+z)$ accounts for the stretching of wavelength bins between the rest and observed frames \parencite{hoggDistanceMeasuresCosmology2000,gabrielliStatisticalPhysicsCosmic2005}. The sky-averaged intensity is then obtained by dividing the total flux by the light cone solid angle, as defined in \cref{eq:solidAngle}.
+\noindent where $d_L(z)$ is the luminosity distance and the factor of $(1+z)$ accounts for the stretching of wavelength bins between the rest and observed frames \parencite{hoggDistanceMeasuresCosmology2000,gabrielliStatisticalPhysicsCosmic2005}. The sky averaged intensity is then obtained by dividing the total flux by the light cone solid angle, as defined in \cref{eq:solidAngle}.
 
 \subsection{The Radio Regime}
-
-MORE BACKGROUDN HERE OF RADIO IS AGN + SF
 
 Synchrotron radiation is intense, polarized electromagnetic radiation emitted when charged particles (usually electrons) moving at relativistic speeds are accelerated along a curved path by magnetic fields
 
@@ -289,15 +284,17 @@ The AGN contribution to the radio background is computed from the black hole acc
 
 \subsection{Uncertainty Estimation}
 
-One factor not considered so far are the implications of sources of uncertainty. The SED itself is derived from a finite sample, the construction of the light cone introduces a sampling variance from the inherent cosmic variance of the universe and hence a measure of statistical uncertainty is required. We implement the jackknife resampling method \parencite{bergerJackknifeVarianceEstimator2007} by dividing our light cone into 16 quadrants using RA/DEC quantile bins. For each realisation $k$ (0-15), we exclude the $k^{\mathrm{th}}$ quadrant and recompute the full SED background in each one to then calculate a mean and variance,
+One factor not considered so far is the implications of sources of uncertainty. The SED itself is derived from a finite sample, the construction of the light cone introduces a sampling variance from the inherent cosmic variance of the universe and hence a measure of statistical uncertainty is required. We implement the jackknife resampling method \parencite{bergerJackknifeVarianceEstimator2007} by dividing our light cone into 16 quadrants using RA/DEC quantile bins. For each realisation $k$ (0-15), we exclude the $k^{\mathrm{th}}$ quadrant and recompute the full SED background in each one to then calculate a jackknife variance,
 
 \begin{equation}
-    \sigma^2 = \frac{N-1}{N} \sum (x_k-\bar{x})^2,
+    \sigma_{jk}^2 = \frac{N-1}{N} \sum (x_k-\bar{x})^2,
 \end{equation}
 
-\noindent where . Here we have assumed the independent sub samples are independent of each other, we have not accounted for any systemic uncertainty, and we are limited with the number of quadrants by simulation volume. These uncertainties are applied to each SED in the respective wavelength bins.
+\noindent where explain variables . Here we have assumed the sub samples are independent of each other, we have not accounted for any systemic uncertainty, and we are limited with the number of quadrants by simulation volume. These uncertainties are applied to each SED in the respective wavelength bins.
  
 \section{Results \& Discussion}
+
+We present the final EBL prediction by the \textsc{simba} simulations in \cref{pass} 
 
 errors, binned plots, light cone plots
 
@@ -321,6 +318,8 @@ The absolute energy budget is set by the simulation’s $L_\mathrm{FIR}$ definit
 No explicit CMB heating or line emission: The continuum MBB model does not include spectral lines cite \cite{desertInterstellarDustEmission2022} for this
 
 missing snapshots or missing $L_\mathrm{FIR}$ for some snapshots this would underestimate the far IR luminosity.
+
+binned by z plots
 
 \subsection{The Radio Regime}
 

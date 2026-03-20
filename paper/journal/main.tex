@@ -715,6 +715,30 @@ optical/near IR should be really good because the imf and other stuff is reprodu
 
 need to fix ebl plot by emitting the data points. because they're split and plotting all combined, agn only, and sf only for radio so going to plot only combined. This gives a fairly large overestimate of the radio spectrum as seen in the figure: which is not obvious. i think you could argue that current radio surveys are not very deep, so maybe they are missing lots of objects that should be contributing. to that end, you could make a cut on your objects, i.e. only sum up objects with L\_1.4>1e23 or something. see if that might explain why the data is lower.
 
+need to add more to introduction read and use the papers- coupling/decoupling and other important info, more about dust in simba, jackknife write up and code, results and discussion
+
+jackknife code
+
+\newday{2026-03-19} finished jackknife code, had accidentally made a mistake in optical background which was causing the jackknife and normal ebl to break, this has been fixed now. also needed to apply mask properly when doing the jackknife. getting following results:
+
+OPTICAL:
+Peak at λ = 1.19 µm
+νIν = 7.3102 ± 0.5234
+Relative error: 7.2\%
+
+FAR IR:
+Peak at λ = 171.53 µm
+νIν = 12.0956 ± 0.2711
+Relative error : 2.2\%
+
+RADIO:
+Peak at λ = 2997.92 µm
+νIν = 0.0011 ± 0.0001 
+Relative error: 9.8\%
+
+Also working on final light cone plots to basically colour by respective luminosity/flux so optical is v band apparent magnitude, far ir is L\_FIR luminosity, radio is 1.4GHz luminosity from agn + sf. shows the dominance at each point for each spectra in the light cone
+
+want to check optical again for fix
 
 \end{document}
 

@@ -135,27 +135,6 @@ def run_jackknife(cfg, args, n_regions_per_side=4, a_dust=-0.017341):
     lam_fir = None
     nu_radio = None
 
-    # DEBUG: Run once without mask to check baseline
-    print("\n=== DEBUG: Running optical baseline (no mask) ===")
-    lam_base, I_nu_base, _ = lightcone_optical_background(
-        cfg, area_deg2=args.area, z_min=args.z_min, z_max=args.z_max,
-        galaxy_mask=None
-    )
-    nu_base = (c_light / (lam_base * u.AA)).to_value(u.Hz)
-    nuInu_base = nu_base * I_nu_base * 1e6
-    print(f"Baseline (no mask): nuInu max={np.max(nuInu_base):.3e}, peak at {lam_base[np.argmax(nuInu_base)]*1e-4:.2f} um")
-
-    # DEBUG: Run with all-True mask to isolate mask handling
-    print("\n=== DEBUG: Running optical with all-True mask ===")
-    all_true_mask = np.ones(n_gal, dtype=bool)
-    lam_test, I_nu_test, _ = lightcone_optical_background(
-        cfg, area_deg2=args.area, z_min=args.z_min, z_max=args.z_max,
-        galaxy_mask=all_true_mask
-    )
-    nu_test = (c_light / (lam_test * u.AA)).to_value(u.Hz)
-    nuInu_test = nu_test * I_nu_test * 1e6
-    print(f"All-True mask: nuInu max={np.max(nuInu_test):.3e}, peak at {lam_test[np.argmax(nuInu_test)]*1e-4:.2f} um")
-
     # Run backgrounds leaving out each region
     for i in range(n_regions):
         print(f"\n--- Jackknife sample {i + 1}/{n_regions} (excluding region {i}) ---")
@@ -180,13 +159,6 @@ def run_jackknife(cfg, args, n_regions_per_side=4, a_dust=-0.017341):
             lam_opt = lam
         nu_opt = (c_light / (lam * u.AA)).to_value(u.Hz)
         nuInu = nu_opt * I_nu * 1e6  # nW m^-2 sr^-1
-
-        # Debug: print intermediate values for first iteration
-        if i == 0:
-            print(f"  DEBUG optical: lam={lam[:5]}... (len={len(lam)}, any nan={np.any(np.isnan(lam))})")
-            print(f"  DEBUG optical: I_nu max={np.max(I_nu):.3e}, min={np.min(I_nu):.3e}")
-            print(f"  DEBUG optical: nu max={np.max(nu_opt):.3e}, min={np.min(nu_opt):.3e}")
-            print(f"  DEBUG optical: nuInu max={np.max(nuInu):.3e}, min={np.min(nuInu):.3e}")
 
         optical_samples.append(nuInu)
 
@@ -280,64 +252,6 @@ def save_results(cfg, args, results):
     return out_file
 
 
-def plot_results(cfg, args, results):
-    """Create plot with jackknife error bands."""
-    fig, ax = plt.subplots(figsize=(12, 7))
-
-    floor = 1e-6
-
-    # Optical with dust
-    lam = results["optical"]["lam_um"]
-    mean = results["optical"]["mean"]
-    std = results["optical"]["std"]
-    valid = mean > floor
-    ax.fill_between(lam[valid], (mean - std)[valid], (mean + std)[valid],
-                    alpha=0.3, color='steelblue')
-    ax.loglog(lam[valid], mean[valid], lw=2, color='steelblue',
-              label='Optical/NIR')
-
-    # Far-IR
-    lam_fir = results["farIR"]["lam_um"]
-    mean_fir = results["farIR"]["mean"]
-    std_fir = results["farIR"]["std"]
-    valid_fir = mean_fir > floor
-    ax.fill_between(lam_fir[valid_fir], (mean_fir - std_fir)[valid_fir],
-                    (mean_fir + std_fir)[valid_fir], alpha=0.3, color='firebrick')
-    ax.loglog(lam_fir[valid_fir], mean_fir[valid_fir], lw=2, color='firebrick',
-              label='Far-IR (dust MBB)')
-
-    # Radio
-    lam_radio = results["radio"]["lam_um"]
-    mean_radio = results["radio"]["mean"]
-    std_radio = results["radio"]["std"]
-    # Sort by wavelength for proper plotting
-    order = np.argsort(lam_radio)
-    lam_radio = lam_radio[order]
-    mean_radio = mean_radio[order]
-    std_radio = std_radio[order]
-    valid_radio = mean_radio > floor
-    ax.fill_between(lam_radio[valid_radio], (mean_radio - std_radio)[valid_radio],
-                    (mean_radio + std_radio)[valid_radio], alpha=0.3, color='forestgreen')
-    ax.loglog(lam_radio[valid_radio], mean_radio[valid_radio], lw=2, color='forestgreen',
-              label='Radio (SF + AGN)')
-
-    ax.set_xlabel(r'$\lambda_{\rm obs}$ [$\mu$m]', fontsize=13)
-    ax.set_ylabel(r'$\nu\, I_\nu$ [nW m$^{-2}$ sr$^{-1}$]', fontsize=13)
-    ax.set_title(f'Cosmic background with jackknife errors — {cfg.name}\n'
-                 f'($z = {args.z_min}$–${args.z_max}$, {results["n_regions"]} regions)',
-                 fontsize=14)
-    ax.legend(fontsize=11, loc='upper right')
-    ax.grid(True, which='both', ls=':', alpha=0.4)
-    ax.set_xlim(0.1, 3e7)
-
-    out = Path("figures/jackknife") / f"jackknife_bg_{cfg.name}.png"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out, dpi=200, bbox_inches='tight')
-    print(f"Saved figure → {out}")
-
-    return fig, ax
-
-
 def print_summary(results):
     """Print summary statistics."""
     print("\n" + "=" * 60)
@@ -389,10 +303,6 @@ def main():
 
     # Print summary
     print_summary(results)
-
-    # Plot
-    plot_results(cfg, args, results)
-
 
 if __name__ == "__main__":
     main()

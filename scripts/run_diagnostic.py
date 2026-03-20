@@ -26,6 +26,32 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.config import load_config
 from src.backgrounds.farIR import lightcone_farIR_background
 
+import matplotlib as mpl
+
+mpl.rcParams.update({
+    # Requires a LaTeX install (TeX Live / MiKTeX). Without one, set
+    # 'text.usetex': False and 'mathtext.fontset': 'cm' instead.
+    'text.usetex'         : True,
+    'text.latex.preamble' : r'\usepackage{amsmath}',
+    'font.family'         : 'serif',   # Computer Modern = default LaTeX font
+
+    # Match your document's font sizes (most journals: 10 pt)
+    'font.size'           : 10,
+    'axes.labelsize'      : 10,
+    'xtick.labelsize'     : 9,
+    'ytick.labelsize'     : 9,
+    'legend.fontsize'     : 9,
+
+    # Okabe–Ito palette — colorblind-safe, one line to replace the default cycle
+    'axes.prop_cycle': mpl.cycler('color', [
+        '#0072B2', '#D55E00', '#009E73',
+        '#E69F00', '#CC79A7', '#56B4E9',
+    ]),
+
+    'lines.linewidth'  : 1.5,
+    'axes.linewidth'   : 0.8,
+})
+
 
 # ── unit helpers ──────────────────────────────────────────────────
 CGS_TO_NW_M2 = 1e6   # 1 erg/s/cm² → 1e6 nW/m²
@@ -119,7 +145,7 @@ def main():
             continue
         ax_hist.hist(temps, bins=60, range=(5, 80), alpha=0.55,
                      color=col, edgecolor='k', linewidth=0.3,
-                     label=f'$a = {a_val:+.4f}$'
+                     label=f'$a_{{\\rm dust}} = {a_val:+.4f}$'
                            f'  (med = {np.nanmedian(temps):.3f} K)')
     ax_hist.set_xlabel(r'$T_{\rm eqv}$ [K]', fontsize=12)
     ax_hist.set_ylabel('Number of galaxies', fontsize=12)

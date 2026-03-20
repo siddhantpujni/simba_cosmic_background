@@ -27,6 +27,32 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 HDF5_DIR = Path("/home/spujni/sim/m100n1024/s50/Groups/")
 SNAP_PREFIX = "m100n1024"
 
+import matplotlib as mpl
+
+mpl.rcParams.update({
+    # Requires a LaTeX install (TeX Live / MiKTeX). Without one, set
+    # 'text.usetex': False and 'mathtext.fontset': 'cm' instead.
+    'text.usetex'         : True,
+    'text.latex.preamble' : r'\usepackage{amsmath}',
+    'font.family'         : 'serif',   # Computer Modern = default LaTeX font
+
+    # Match your document's font sizes (most journals: 10 pt)
+    'font.size'           : 10,
+    'axes.labelsize'      : 10,
+    'xtick.labelsize'     : 9,
+    'ytick.labelsize'     : 9,
+    'legend.fontsize'     : 9,
+
+    # Okabe–Ito palette — colorblind-safe, one line to replace the default cycle
+    'axes.prop_cycle': mpl.cycler('color', [
+        '#0072B2', '#D55E00', '#009E73',
+        '#E69F00', '#CC79A7', '#56B4E9',
+    ]),
+
+    'lines.linewidth'  : 1.5,
+    'axes.linewidth'   : 0.8,
+})
+
 
 def load_lightcone(path):
     """Load lightcone data from HDF5."""
@@ -201,8 +227,6 @@ def plot_three_panel_wedge_with_radio(data, appmag_v, lfir, radio_flux, outpath,
     Panel 3: log10(radio flux at 1.4 GHz) [erg/s/cm^2/Hz]
     All: x-axis is comoving radial distance [Mpc], y is transverse.
     """
-    plt.style.use('dark_background')
-
     # Geometry
     z = data["z"]
     ra = data["ra"]
@@ -289,12 +313,11 @@ def plot_three_panel_wedge_with_radio(data, appmag_v, lfir, radio_flux, outpath,
             ax.set_xlabel("Comoving radial distance [Mpc]", fontsize=12)
         if i == 1:
             ax.set_ylabel("Comoving transverse distance [Mpc]", fontsize=12)
-
     fig.suptitle(
-        f"SIMBA light cone — $N_\\text{{gal}} = {n_gal:,}$",
-        fontsize=16, y=0.98
-    )
-    fig.tight_layout(rect=[0, 0, 1, 0.96])
+        f"SIMBA Light Cone Coloured Wedges — $N_\\text{{gal}} = {n_gal:,}$",
+    fontsize=16, y=0.94
+)
+    fig.tight_layout(rect=[0, 0, 1, 0.94])
     fig.savefig(outpath, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved: {outpath}")

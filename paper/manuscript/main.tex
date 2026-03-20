@@ -101,8 +101,8 @@ The resulting light cone allows us to compute the necessary observable quantitie
 
 \begin{figure*}
     \centering
-    \includegraphics[width=\linewidth]{figures/lightcone/lightcone_wedge_three_panel.png}
-    \caption{Wedge diagram of the \textsc{simba} light cone showing comoving radial distance (Mpc) along the x-axis and comoving transverse distance (Mpc) along the y-axis. Each points represents an individual galaxy. (a) is optical coloured by v-band apparent magnitude, (b) is far IR emission coloured by infrared luminosity L_fir, and (c) is coloured by 1.4GHz radio emission.}
+    \includegraphics[width=0.8  \linewidth]{figures/lightcone/lightcone_wedge_three_panel.png}
+    \caption{Wedge diagram of the \textsc{simba} light cone showing comoving radial distance (Mpc) along the x-axis and comoving transverse distance (Mpc) along the y-axis. Each points represents an individual galaxy. (a) is optical coloured by v-band apparent magnitude, (b) is far IR emission coloured by infrared luminosity L\_fir, and (c) is coloured by 1.4GHz radio emission.}
     \label{fig:lcWedge}
 \end{figure*}
 
@@ -181,11 +181,11 @@ overall temperature scaling parameter $a_{\mathrm{dust}}$ is treated as a free p
 
 \noindent where $D_i$ and $\sigma_i$ are the observed value and uncertainty at wavelength $\lambda_i$, and $M_i(a_{\mathrm{dust}})$ is the model prediction. Since $a_{\mathrm{dust}}$ is sampled on a discrete grid, a secondary interpolation is performed along $a_{\mathrm{dust}}$ to allow a bounded one dimensional minimiser to locate the best fitting value continuously. Goodness of fit is quantified via a reduced $\chi^2$. 
 
-We present diagnostic plots of the temperature from the fitting of $a_{\mathrm{dust}}$ in \cref{fig:tempDiagnostic}to highlight the spread of different possible temperature that the different $a_{\mathrm{dust}}$ values give. We plot the best fitting value with 50$\sigma$ either side to show a reasonable spread otherwise you can not really see anything. The observational EBL data is also plotted to show the differences in the fits. mean dust temp of the local universe is expected to be low around 30K ish but when you go out to higher redshifts this temperature increases which is why we have this high median (cite that paper i sent romeel here) however we do see the lower temps shown by the histogram as well and that they are accoutned for. at higher redshfit closer to cosmic noon we have more active galaxies and so more sf and younger stars so hotter as go farther out
+We present diagnostic plots of the temperature from the fitting of $a_{\mathrm{dust}}$ in \cref{fig:tempDiagnostic}to highlight the spread of different possible temperature that the different $a_{\mathrm{dust}}$ values give. We plot the best fitting value with 50$\sigma$ either side to show a reasonable spread otherwise you can not really see anything. The observational EBL data is also plotted to show the differences in the fits. mean dust temp of the local universe is expected to be low around 30K ish but when you go out to higher redshifts this temperature increases which is why we have this high median (cite that paper i sent romeel here) however we do see the lower temps shown by the histogram as well and that they are accoutned for. at higher redshfit closer to cosmic noon we have more active galaxies and so more sf and younger stars so hotter as go farther out \cite{parenteDriversCosmicDust2026}
 
 \begin{figure*}
     \centering
-    \includegraphics[width=0.7\linewidth]{figures/farIR/farIR_bg_m100n1024_diagnostic.png}
+    \includegraphics[width=0.8\linewidth]{figures/farIR/farIR_bg_m100n1024_diagnostic.png}
     \caption{Central value of $a_{\mathrm{dust}} = -0.0173(6)$ is best fitting value}
     \label{fig:tempDiagnostic}
 \end{figure*}
@@ -290,7 +290,7 @@ One factor not considered so far is the implications of sources of uncertainty. 
     \sigma_{jk}^2 = \frac{N-1}{N} \sum (x_k-\bar{x})^2,
 \end{equation}
 
-\noindent where explain variables . Here we have assumed the sub samples are independent of each other, we have not accounted for any systemic uncertainty, and we are limited with the number of quadrants by simulation volume. These uncertainties are applied to each SED in the respective wavelength bins.
+\noindent where explain variables . Here we have assumed the sub samples are independent of each other, we have not accounted for any systemic uncertainty, and we are limited with the number of quadrants by simulation volume. These uncertainties are applied to each SED in the respective wavelength bins. We also do binned plots where a light cone is generate for each bin and the same method is followed as described with jackknife errors
  
 \section{Results \& Discussion}
 
@@ -302,7 +302,7 @@ present main big graph and then talk about each individually, and then present t
 
 The cosmic spectral energy distribution exhibits two dominant peaks. The optical and ultraviolet emission arises primarily from stellar populations within galaxies, particularly young massive stars that emit strongly at short wavelengths. A second peak in the far-infrared results from interstellar dust grains absorbing ultraviolet and optical radiation and re-emitting this energy thermally. At longer wavelengths in the radio regime, emission is produced through a combination of synchrotron radiation from supernova remnants, free–free emission from ionised gas in HII regions, and radio jets associated with active galactic nuclei.
 
-binned redshift plots 
+binned redshift plots makes sense majority of the optical comes from local universe as its apparent mag and it'll be fainter farther out. and then for far IR it makes sense its also dominant in z = 1-3 because light travelling for longer will interact with more dust and re-emit in longer redder wavelengths. radio analysis and expand on everything else more too. the weird tail of optical is uv redshift. 
 
 \subsection{The Optical/NIR Regime}
 

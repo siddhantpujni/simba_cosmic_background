@@ -252,9 +252,9 @@ def _obs_scatter(ax, df):
         ax.errorbar(
             sub["lam_um"], sub["nuInu_nW"],
             yerr=sub["err_nW"] if has_err else None,
-            fmt=markers[i % len(markers)], color=cmap(i),
-            ms=5, lw=1.0, capsize=2, label=inst,
-            zorder=5, alpha=0.85,
+            fmt=markers[i % len(markers)], color='k', alpha = 0.7, ecolor='k',
+            ms=5, lw=1.0, capsize=2, label='Observational EBL Data',
+            zorder=5,
         )
 
 
@@ -295,7 +295,7 @@ def plot_full_ebl(ebl: dict, jk: dict, obs: pd.DataFrame,
     
     ax.set_xlabel(r"$\lambda_{\rm obs}\ [\mu\mathrm{m}]$")
     ax.set_ylabel(r"$\nu I_\nu\ [\mathrm{nW\,m^{-2}\,sr^{-1}}]$")
-    ax.set_title("SIMBA extragalactic background light  ($z = 0$–$7$)",
+    ax.set_title("SIMBA Extragalactic Background Light",
                  pad=8)
 
     ax.legend(loc="upper right", framealpha=0.9, edgecolor="0.8",
@@ -332,7 +332,7 @@ def plot_redshift_binned_ebl(jk_paths, obs, save_dir):
     ]
 
     fig, axes = plt.subplots(3, 1, figsize=(9, 13), sharex=True)
-    fig.suptitle("SIMBA extragalactic background light by redshift bin", fontsize=14, y=0.99)
+    fig.suptitle("SIMBA Extragalactic Background Light by Redshift Bin", fontsize=14, y=0.99)
 
     for i, (jk_path, label, colors) in enumerate(zip(jk_paths, bin_labels, bin_colors)):
         jk = load_jackknife(jk_path)

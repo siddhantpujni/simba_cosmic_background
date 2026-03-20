@@ -185,41 +185,10 @@ def load_appmag_v(data):
 
     return appmag_v
 
-def plot_lightcone_slice_appmag(data, app_mag, outpath, absmag_key="absmag.g"):
-    """
-    2D light-cone slice colored by apparent magnitude.
-    """
-    z = data["z"]
-    ra = data["ra"]
-    d_radial = cosmo.comoving_distance(z).to("Mpc").value
-    ra_centre = np.median(ra)
-    delta_ra_rad = np.deg2rad(ra - ra_centre)
-    d_transverse = delta_ra_rad * d_radial
-    y_lim = np.nanpercentile(np.abs(d_transverse), 99.5)
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-    im = ax.scatter(
-        d_radial, d_transverse, s=0.5, alpha=0.6,
-        c=app_mag, cmap="viridis_r",  # reverse so bright = yellow
-        vmin=np.nanpercentile(app_mag, 1),
-        vmax=np.nanpercentile(app_mag, 99),
-        rasterized=True,
-    )
-    cb = fig.colorbar(im, ax=ax, pad=0.02)
-    cb.set_label(f"Apparent magnitude ({absmag_key})", fontsize=11)
-    ax.set_xlabel("Comoving radial distance [Mpc]", fontsize=11)
-    ax.set_ylabel("Comoving transverse distance [Mpc]", fontsize=11)
-    ax.set_ylim(-y_lim, y_lim)
-    ax.set_title("Galaxies colored by apparent magnitude", fontsize=12)
-    fig.tight_layout()
-    fig.savefig(outpath, dpi=200, bbox_inches="tight")
-    plt.close(fig)
-    print(f"Saved: {outpath}")
-
 with h5py.File(ROOT / "data" / "results" / "radio_flux_1p4GHz_m100n1024.h5", "r") as f:
     radio_flux = f["flux_total"][:]
 
-def plot_three_panel_wedge_with_radio(data, appmag_v, lfir, radio_flux, outpath, random_seed=42, max_points=240000):
+def plot_three_panel_wedge_with_radio(data, appmag_v, lfir, radio_flux, outpath, random_seed=42, max_points=240883):
     """
     Three-panel wedge diagram for the SIMBA light cone.
     Panel 1: v-band apparent magnitude (optical)
@@ -275,7 +244,7 @@ def plot_three_panel_wedge_with_radio(data, appmag_v, lfir, radio_flux, outpath,
             "cmap": "viridis_r",
             "vmin": vmin_v,
             "vmax": vmax_v,
-            "label": "v-band apparent magnitude",
+            "label": r"$m_V$",
             "panel_label": "(a)"
         },
         {
@@ -291,8 +260,7 @@ def plot_three_panel_wedge_with_radio(data, appmag_v, lfir, radio_flux, outpath,
             "cmap": "plasma",
             "vmin": vmin_radio,
             "vmax": vmax_radio,
-            "label": r"$\log_{10}($Radio flux at 1.4 GHz$)$ [erg s$^{-1}$ cm$^{-2}$ Hz$^{-1}$]",
-            "panel_label": "(c)"
+            "label": r"$\log_{10}(S_{1.4\,\mathrm{GHz}})\ \mathrm{[erg\,s^{-1}\,cm^{-2}\,Hz^{-1}]}$",            "panel_label": "(c)"
         }
     ]
 
@@ -310,14 +278,42 @@ def plot_three_panel_wedge_with_radio(data, appmag_v, lfir, radio_flux, outpath,
         ax.text(0.01, 0.95, panels[i]["panel_label"], transform=ax.transAxes,
                 fontsize=14, fontweight="bold", va="top", ha="left")
         if i == 2:
-            ax.set_xlabel("Comoving radial distance [Mpc]", fontsize=12)
+            ax.set_xlabel("Comoving Radial Distance [Mpc]", fontsize=12)
         if i == 1:
-            ax.set_ylabel("Comoving transverse distance [Mpc]", fontsize=12)
+            ax.set_ylabel("Comoving Transverse Distance [Mpc]", fontsize=12)
     fig.suptitle(
-        f"SIMBA Light Cone Coloured Wedges — $N_\\text{{gal}} = {n_gal:,}$",
-    fontsize=16, y=0.94
+        f"SIMBA Light Cone Coloured Wedges",
+    fontsize=16, y=0.90
 )
-    fig.tight_layout(rect=[0, 0, 1, 0.94])
+# ── Redshift Axis Placement ─────────────────────────────────────────
+    # Target the top panel so the redshift axis frames the entire figure
+    ax_top_panel = axes[0]
+    x_min, x_max = axes[-1].get_xlim()
+    
+    # Choose redshift ticks (e.g., z = 0, 1, 2, 3, 4, 5, 6, 7)
+    z_ticks = np.arange(0, 8, 1)
+    d_ticks = cosmo.comoving_distance(z_ticks).to("Mpc").value
+    
+    # Only keep ticks within the current x-limits
+    mask = (d_ticks >= x_min) & (d_ticks <= x_max)
+    z_ticks = z_ticks[mask]
+    d_ticks = d_ticks[mask]
+    
+    # Add the twin axis
+    ax_z = ax_top_panel.twiny()
+    ax_z.set_xlim(x_min, x_max)
+    ax_z.set_xticks(d_ticks)
+    ax_z.set_xticklabels([f"{z:.0f}" for z in z_ticks])
+    ax_z.set_xlabel(r"Redshift $z$", fontsize=12, labelpad=2)
+
+    # ── Final Layout Adjustments ────────────────────────────────────────
+    # Run tight_layout first to handle the internal panel spacing
+    fig.tight_layout()
+    
+    # Adjust the top margin manually to leave room for the twin axis and the suptitle
+    fig.subplots_adjust(top=0.88)
+    fig.suptitle("SIMBA Light Cone Coloured Wedges", fontsize=16, y=0.96)
+    
     fig.savefig(outpath, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved: {outpath}")

@@ -332,7 +332,7 @@ def plot_redshift_binned_ebl(jk_paths, obs, save_dir):
     ]
 
     fig, axes = plt.subplots(3, 1, figsize=(9, 13), sharex=True)
-    fig.suptitle("SIMBA Extragalactic Background Light by Redshift Bin", fontsize=14, y=0.99)
+    #fig.suptitle("SIMBA Extragalactic Background Light by Redshift Bin", fontsize=14, y=0.99)
 
     for i, (jk_path, label, colors) in enumerate(zip(jk_paths, bin_labels, bin_colors)):
         jk = load_jackknife(jk_path)
@@ -366,6 +366,72 @@ def plot_redshift_binned_ebl(jk_paths, obs, save_dir):
     fig.tight_layout()
     save_dir.mkdir(parents=True, exist_ok=True)
     out = save_dir / "ebl_jackknife_bins.pdf"
+    fig.savefig(out, dpi=200, bbox_inches="tight")
+    fig.savefig(out.with_suffix(".png"), dpi=200, bbox_inches="tight")
+    print(f"Saved → {out}")
+    plt.close(fig)
+
+# ══════════════════════════════════════════════════════════════════════════
+# Figure 3 — EBL decomposed by redshift bins (Single Axis)
+# ══════════════════════════════════════════════════════════════════════════
+
+def plot_redshift_binned_single_ax(jk_paths: list, obs: pd.DataFrame, save_dir: Path) -> None:
+    """
+    Plot EBL for three jackknife bins on a single graph.
+    Each redshift bin is assigned a unique colour applied to its optical, far-IR, and radio curves.
+    """
+    bin_labels = [
+        "z = 0.0–1.0",
+        "z = 1.0–3.0",
+        "z = 3.0–7.0"
+    ]
+    
+    # Use distinct, colourblind-safe colours for each redshift bin
+    bin_colours = ["#4C9BE8", "#E8834C", "#6ABF69"]  
+
+    fig, ax = plt.subplots(figsize=(9, 5.5))
+
+    for jk_path, label, colour in zip(jk_paths, bin_labels, bin_colours):
+        if not jk_path.exists():
+            print(f"  WARN: {jk_path} not found, skipping {label}...")
+            continue
+            
+        jk = load_jackknife(jk_path)
+        
+        # Plot Optical (with label for the legend)
+        _plot_component(ax,
+                        jk["optical"]["lam_um"], jk["optical"]["mean"],
+                        std=jk["optical"]["std"],
+                        color=colour, label=label)
+        
+        # Plot Far-IR and Radio (no label, so the legend doesn't duplicate)
+        _plot_component(ax,
+                        jk["farIR"]["lam_um"], jk["farIR"]["mean"],
+                        std=jk["farIR"]["std"],
+                        color=colour, label="")
+        
+        _plot_component(ax,
+                        jk["radio"]["lam_um"], jk["radio"]["mean"],
+                        std=jk["radio"]["std"],
+                        color=colour, label="")
+
+    # Observed data
+    _obs_scatter(ax, obs)
+
+    # Axes and formatting
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_ylim(1e-7, 1e3) 
+    ax.set_xlabel(r"$\lambda_{\rm obs}\ [\mu\mathrm{m}]$")
+    ax.set_ylabel(r"$\nu I_\nu\ [\mathrm{nW\,m^{-2}\,sr^{-1}}]$")
+    # ax.set_title("SIMBA EBL Contributions by Redshift", pad=8)
+
+    ax.legend(loc="upper right", framealpha=0.9, edgecolor="0.8", fontsize=9)
+    ax.grid(True, which="major", ls=":", alpha=0.35, color="0.6")
+
+    fig.tight_layout()
+    save_dir.mkdir(parents=True, exist_ok=True)
+    out = save_dir / "ebl_jackknife_bins_single.pdf"
     fig.savefig(out, dpi=200, bbox_inches="tight")
     fig.savefig(out.with_suffix(".png"), dpi=200, bbox_inches="tight")
     print(f"Saved → {out}")
@@ -423,7 +489,11 @@ def main():
     ]
     plot_redshift_binned_ebl(jk_bin_paths, obs, FIG_DIR)
 
+    print("\n── Figure 3: EBL by redshift bin (Single axis) ──")
+    plot_redshift_binned_single_ax(jk_bin_paths, obs, FIG_DIR)
+
     print("\nDone.")
+
 
 if __name__ == "__main__":
     main()

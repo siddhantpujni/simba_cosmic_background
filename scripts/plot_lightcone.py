@@ -281,10 +281,7 @@ def plot_three_panel_wedge_with_radio(data, appmag_v, lfir, radio_flux, outpath,
             ax.set_xlabel("Comoving Radial Distance [Mpc]", fontsize=12)
         if i == 1:
             ax.set_ylabel("Comoving Transverse Distance [Mpc]", fontsize=12)
-    fig.suptitle(
-        f"SIMBA Light Cone Coloured Wedges",
-    fontsize=16, y=0.90
-)
+
 # ── Redshift Axis Placement ─────────────────────────────────────────
     # Target the top panel so the redshift axis frames the entire figure
     ax_top_panel = axes[0]
@@ -304,16 +301,14 @@ def plot_three_panel_wedge_with_radio(data, appmag_v, lfir, radio_flux, outpath,
     ax_z.set_xlim(x_min, x_max)
     ax_z.set_xticks(d_ticks)
     ax_z.set_xticklabels([f"{z:.0f}" for z in z_ticks])
-    ax_z.set_xlabel(r"Redshift $z$", fontsize=12, labelpad=2)
+    ax_z.set_xlabel(r"Redshift $z$", fontsize=12, labelpad=1)
 
     # ── Final Layout Adjustments ────────────────────────────────────────
     # Run tight_layout first to handle the internal panel spacing
     fig.tight_layout()
     
     # Adjust the top margin manually to leave room for the twin axis and the suptitle
-    fig.subplots_adjust(top=0.88)
-    fig.suptitle("SIMBA Light Cone Coloured Wedges", fontsize=16, y=0.96)
-    
+    fig.subplots_adjust(top=0.88)    
     fig.savefig(outpath, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved: {outpath}")

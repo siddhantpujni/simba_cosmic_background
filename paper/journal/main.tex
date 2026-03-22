@@ -738,7 +738,43 @@ Relative error: 9.8\%
 
 Also working on final light cone plots to basically colour by respective luminosity/flux so optical is v band apparent magnitude, far ir is L\_FIR luminosity, radio is 1.4GHz luminosity from agn + sf. shows the dominance at each point for each spectra in the light cone
 
-want to check optical again for fix
+want to check optical again for fix potentially
+
+\newday{2026-03-20} 
+not sure where to include best fitting $a$ value. in results or do i quote it in the methods with my graph.
+
+where do i mention improvements to the methods
+
+where do i mention PAHs radiation and not considering it.
+
+no clue how to discuss and bring up the driver data where/how do i mention it
+
+\newday{2026-03-13}
+
+Secondly, uncertainties in the modelling of dust attenuation within the simulation may play a role. Dust affects optical emission by absorbing and scattering ultraviolet and optical photons, and any inaccuracies in the dust prescription—whether through overestimation or underestimation of attenuation—can significantly impact the resulting SED. While SIMBA includes prescriptions for dust production and destruction, these processes are inherently complex and may not fully capture the diversity of dust properties across different galaxy populations.
+
+
+The predicted \textsc{simba} EBL, integrated from $z = 0 \rightarrow 7$, is presented in \cref{fig:finalEBL}. The redshift cutoff at $z = 7$ is justified by the negligible contribution of higher redshift sources to the total signal, as demonstrated by the light cone wedges in \cref{fig:lcWedge}. The three spectral components optical/NIR, far IR, and radio are shown separately alongside the curated observational EBL data from Driver et al., which is itself assembled from a range of independent surveys and measurement techniques. The heterogeneous origin of these data points means that systematic offsets between individual datasets are not unexpected, and should be borne in mind when interpreting residuals between the model and the observations. Overall, the predicted spectrum broadly reproduces the shape and amplitude of the observed EBL across the sampled wavelength range. The optical/NIR component is moderately under predicted, the far-IR peak is well-reproduced, and the radio is systematically over predicted. Jackknife uncertainties are shown as shaded bands but are generally small enough to be visually unresolvable on the full plot.
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{figures/ebl_final/ebl_full_jackknife.png}
+    \caption{The \textsc{simba} predicted EBL integrated over $0 < z < 7$, with jackknife uncertainties shown as shaded bands. The three model components — optical/NIR (blue), far-IR dust continuum (red), and radio (green) — are shown separately alongside the compiled observational data (black points).}
+    \label{fig:finalEBL}
+\end{figure*}
+
+To isolate the contributions from distinct cosmic epochs, the EBL was computed separately in three redshift bins: $0 < z < 1$, $1 < z < 3$, and $3 < z < 7$, each constructed from an independent light cone with its own jackknife error estimate (\cref{fig:finalBinnedEBL}). The sum of the three bins recovers the full EBL of \cref{fig:finalEBL}, and the decreasing amplitude with increasing redshift bin confirms that the $z < 3$ universe accounts for the dominant share of the total EBL across all three spectral components. Contributions from $3 < z < 7$ are of order $10^{-2}\,\mathrm{nW\,m^{-2}\,sr^{-1}}$, further supporting the decision to truncate the integration at $z = 7$.
+
+Several physically motivated trends are apparent in the binned decomposition. The optical/NIR emission is dominated by the $0 < z < 1$ bin, as expected: the apparent brightness of stellar populations falls with distance, so the local universe contributes disproportionately to the integrated starlight background. The far IR component peaks in the $1 < z < 3$ bin, coinciding with the epoch of peak cosmic star formation activity. Photons travelling from these distances traverse greater dust column densities, with UV and optical radiation progressively reprocessed into the far IR, whose emission is then further redshifted to longer observed wavelengths. The radio emission is likewise most prominent at low redshift, where radio loud AGN are both abundant and subject to minimal cosmological dimming.
+
+The individual redshift bin estimates carry noticeably larger jackknife uncertainties than the full redshift prediction. This is a consequence of cosmic variance: each narrow bin subtends a smaller comoving volume, making the jackknife sub-volumes more sensitive to the stochastic distribution of bright sources. When integrated over the full redshift range, these fluctuations partially cancel across the larger ensemble of sub-volumes, reducing the relative variance in the total EBL estimate. This behaviour is consistent with the result that cosmic variance scales inversely with the square root of the survey volume \parencite{pass}.
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/ebl_final/ebl_jackknife_bins.png}
+    \caption{The \textsc{simba} predicted EBL decomposed into redshift bins $0 < z < 1$ (lightest), $1 < z < 3$, and $3 < z < 7$ (darkest), with jackknife uncertainties shown as shaded bands. The dominant contribution from $z < 3$ is evident across all three spectral components, with the $3 < z < 7$ bin contributing at the $10^{-2}\,\mathrm{nW\,m^{-2}\,sr^{-1}}$ level. The sum of the three bins recovers the total EBL.}
+    \label{fig:finalBinnedEBL}
+\end{figure*}
 
 \end{document}
 

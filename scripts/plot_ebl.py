@@ -295,8 +295,6 @@ def plot_full_ebl(ebl: dict, jk: dict, obs: pd.DataFrame,
     
     ax.set_xlabel(r"$\lambda_{\rm obs}\ [\mu\mathrm{m}]$")
     ax.set_ylabel(r"$\nu I_\nu\ [\mathrm{nW\,m^{-2}\,sr^{-1}}]$")
-    ax.set_title("SIMBA Extragalactic Background Light",
-                 pad=8)
 
     ax.legend(loc="upper right", framealpha=0.9, edgecolor="0.8",
               ncol=2, fontsize=9)

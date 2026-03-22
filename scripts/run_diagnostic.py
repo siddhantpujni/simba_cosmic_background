@@ -122,7 +122,7 @@ def main():
     for a_val, col in zip(a_vals, colours):
         lam_um, nuInu = fir_results[a_val]
         ax_sed.loglog(lam_um, nuInu, lw=2, color=col,
-                      label=f'Far-IR  $a = {a_val:+.2f}$')
+                      label=f'$a_{{\\rm dust}} = {a_val:+.2f}$')
 
     ax_sed.set_xlabel(r'$\lambda_{\rm obs}$ [$\mu$m]', fontsize=13)
     ax_sed.set_ylabel(r'$\nu\, I_\nu$ [nW m$^{-2}$ sr$^{-1}$]', fontsize=13)
@@ -132,7 +132,7 @@ def main():
     ax_sed.set_xscale("log")
     ax_sed.set_yscale("log")
 
-    ax_sed.set_title(f'Far-IR Cosmic Background Diagnostic Plot', fontsize=14)
+    #ax_sed.set_title(f'Far-IR Cosmic Background Diagnostic Plot', fontsize=14)
     ax_sed.legend(fontsize=10, ncol=2)
     ax_sed.grid(True, which='both', ls=':', alpha=0.4)
     ax_sed.set_xlim(8, 1e4)  # ~8 µm to 10 mm
@@ -148,7 +148,6 @@ def main():
                            f'  (med = {np.nanmedian(temps):.3f} K)')
     ax_hist.set_xlabel(r'$T_{\rm eqv}$ [K]', fontsize=12)
     ax_hist.set_ylabel('Number of galaxies', fontsize=12)
-    ax_hist.set_title('Dust Temperature Distribution', fontsize=13)
     ax_hist.legend(fontsize=9)
     ax_hist.grid(True, ls=':', alpha=0.4)
 

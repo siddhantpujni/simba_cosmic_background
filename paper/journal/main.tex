@@ -484,7 +484,7 @@ P_{\mathrm{thermal}} (\mathrm{W\,Hz^{-1}})
 
 \noindent $A$ and $B$ are constants chosen to make the function continuous and normalised. Since the SFR is a mass rate we need the mass fraction which is \cref{eq:chabrierMassFraction} and then $\mathrm{SFR}_{>5}=f_{>5} \times \mathrm{SFR_total}$. Need to integrate \cref{eq:chabrierLogNormalDistribuition} numerically it has no nice analytic form, will just use \texttt{scipy.quad}
 
-Current implementation does only massive star formation which is greater than 5 solar masses, there is no AGN jets modelled yet which \cite{thomasRadioGalaxyPopulation2021} does analyse and discuss in the paper.
+Current implementation does only massive star formation which is greater than 5 solar masses, there is no AGN jets modelled yet which \cite{thomasRadioGalaxyPopulation2021} does analyse and discuss in the paper. Need to add on the AGN contributions which will dominate.
 
 For far IR I still need to spend a little bit more time to figure out deciding on the normalisation factor and what gives best value. Need to add the overplotting of Simon Driver EBL data.
 
@@ -497,11 +497,12 @@ For far IR I still need to spend a little bit more time to figure out deciding o
     \label{fig:placeholder}
 \end{figure}
 
+Fixed and added the AGN radio emission as described in \cite{thomasRadioGalaxyPopulation2021}
 
 \newday*{2026-03-04} Show Romeel all results for temp diagnostics and the radio emission combined plot. I still need to add the AGN feedback radio emission which will likely dominated the spectrum but \cite{thomasRadioGalaxyPopulation2021} quotes an equation with no $\nu$ dependence so I am not sure to approach this. The equation is 
 
 \begin{equation}
-    \frac{P_\mathrm{Rad}}{10^{30}\mathrm{erg}\text{ }\mathrm{s^{-1}}} = \frac{\dot{M}_{BH}}{4\times10^{17}\mathrm{g}\text{ }\mathrm{s^{-1}}}
+    \frac{P_\mathrm{Rad}}{10^{30}\mathrm{erg}\text{ }\mathrm{s^{-1}}} = \left(\frac{\dot{M}_{BH}}{4\times10^{17}\mathrm{g}\text{ }\mathrm{s^{-1}}}\right)^\frac{17}{12}
     \label{agnRadioEmission}
 \end{equation}
 
@@ -629,7 +630,7 @@ Overall the fit for far IR does not look good i tried redoing the fit after drop
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{}
+    \includegraphics[width=0.5\linewidth]{pass}
     \caption{Caption}
     \label{fig:wjfsd}
 \end{figure}
@@ -672,6 +673,108 @@ check over code for why it depends on box size and check units and errors cause 
 
 read the eagle sim SED paper to double check methods
 
+\newday{2026-03-14} started working on plotting the light cones using gaussian psf and following the ones presented in \cite{lovellChristopherSimba_lightcone_generation2021}.
+
+\newday{2026-03-16} been working on writing up the report for the last few days but have some questions for Romeel:
+
+- how to propogate uncertainties in $a_{dust}$ into the far IR SED/background is there any way of doing so or do i just say the uncertainty is small enough where different plots look identical and can't really be told apart. 
+- light cone visualisations
+- how to cite hogg pre print luminosity distance stuff
+- switch to using frequency in radio intead of wavelengths is that fine
+- would i include the contributions for each background in the methods as a small paragraph at the start or in the intro? as in like oh optical is galaxy stuff where young hot contribute to bluelight, far ir is dust extinction, radio we consider sf and radio agn? where should i include this info as i dont really have an intro anymore
+- how much justification and superfluous detail am i providing like in radio about why the radio luminosity calibration depends primarily on high mass stars. I THINK I NEED MORE EXPLANATIONS / JUSTIFICATIONS OF DECISIONS ACROSS
+- can i just say at the start oh im comparing to observed dataset from simon driver and then later just say oh observed data here h
+- should i include the temp histrogram of the galaxies?
+- do i need the projected sky map with the psf and blurring and stuff and where do i include the light cone visualisation plot...method or results
+
+\newday{2026-03-16}
+made a mistake forgot to include the 17/12 exponent in the AGN radio emission. i was also making a mistake with The paper's relation giving you a bolometric radio power P\_Rad (units: erg s⁻¹), not a spectral luminosity P\_ν (erg s⁻¹ Hz⁻¹). had to fix unit conversion and this fixed it, mistakes were just cancelling out.
+
+made light cone plots to colour by redshift and show the density:
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/lightcone/lightcone_slice_z_lfir.png}
+    \caption{Wedge diagram of the \textsc{simba} light cone showing comoving radial distance (Mpc) along the x-axis and comoving transverse distance (Mpc) along the y-axis. Each points represents an individual galaxy, coloured by its respective redshift.}
+    \label{fig:lcWedge}
+\end{figure}
+
+\newday*{2026-03-18}
+
+put redshift along the top and colour the galaxies by some luminosity to show more information in some optical band to show. could colour lc in optical, lfir, and radio all of them so the total flux/luminosity in each regime to show densities across them
+
+double check optical again to see for mistakes
+
+make 16 different curves using jackknife and then the backgroudn for each one and use that with mean and uncertaintities to get some measure of cosmic variance.
+
+plot the dust temp plot from diagnostics with the fitting and the spread. get median temp but there is some spread and there is a variance of so and so and its on the galaxy thing and not for the background itself. but the median is this and we get lower too cause spread at higher z more temp so its higher cause of sf, and cite that paper i sent romeel. do dust and then 3 sigma each side to show the spread with the variance of the T. plot the dust histogram and then +- 3 sigma on either side to show distribution and discuss that and say oh its only a median. where do i quote $a$ then and how
+
+WHERE SHOULD I INCLUDE THE PAHS STUFF. IR IS DOMINATED BY PAHS but requires FULL RADIATIVE transfer code. 
+
+optical/near IR should be really good because the imf and other stuff is reproduced really really well
+
+need to fix ebl plot by emitting the data points. because they're split and plotting all combined, agn only, and sf only for radio so going to plot only combined. This gives a fairly large overestimate of the radio spectrum as seen in the figure: which is not obvious. i think you could argue that current radio surveys are not very deep, so maybe they are missing lots of objects that should be contributing. to that end, you could make a cut on your objects, i.e. only sum up objects with L\_1.4>1e23 or something. see if that might explain why the data is lower.
+
+need to add more to introduction read and use the papers- coupling/decoupling and other important info, more about dust in simba, jackknife write up and code, results and discussion
+
+jackknife code
+
+\newday{2026-03-19} finished jackknife code, had accidentally made a mistake in optical background which was causing the jackknife and normal ebl to break, this has been fixed now. also needed to apply mask properly when doing the jackknife. getting following results:
+
+OPTICAL:
+Peak at λ = 1.19 µm
+νIν = 7.3102 ± 0.5234
+Relative error: 7.2\%
+
+FAR IR:
+Peak at λ = 171.53 µm
+νIν = 12.0956 ± 0.2711
+Relative error : 2.2\%
+
+RADIO:
+Peak at λ = 2997.92 µm
+νIν = 0.0011 ± 0.0001 
+Relative error: 9.8\%
+
+Also working on final light cone plots to basically colour by respective luminosity/flux so optical is v band apparent magnitude, far ir is L\_FIR luminosity, radio is 1.4GHz luminosity from agn + sf. shows the dominance at each point for each spectra in the light cone
+
+want to check optical again for fix potentially
+
+\newday{2026-03-20} 
+not sure where to include best fitting $a$ value. in results or do i quote it in the methods with my graph.
+
+where do i mention improvements to the methods
+
+where do i mention PAHs radiation and not considering it.
+
+no clue how to discuss and bring up the driver data where/how do i mention it
+
+\newday{2026-03-13}
+
+Secondly, uncertainties in the modelling of dust attenuation within the simulation may play a role. Dust affects optical emission by absorbing and scattering ultraviolet and optical photons, and any inaccuracies in the dust prescription—whether through overestimation or underestimation of attenuation—can significantly impact the resulting SED. While SIMBA includes prescriptions for dust production and destruction, these processes are inherently complex and may not fully capture the diversity of dust properties across different galaxy populations.
+
+
+The predicted \textsc{simba} EBL, integrated from $z = 0 \rightarrow 7$, is presented in \cref{fig:finalEBL}. The redshift cutoff at $z = 7$ is justified by the negligible contribution of higher redshift sources to the total signal, as demonstrated by the light cone wedges in \cref{fig:lcWedge}. The three spectral components optical/NIR, far IR, and radio are shown separately alongside the curated observational EBL data from Driver et al., which is itself assembled from a range of independent surveys and measurement techniques. The heterogeneous origin of these data points means that systematic offsets between individual datasets are not unexpected, and should be borne in mind when interpreting residuals between the model and the observations. Overall, the predicted spectrum broadly reproduces the shape and amplitude of the observed EBL across the sampled wavelength range. The optical/NIR component is moderately under predicted, the far-IR peak is well-reproduced, and the radio is systematically over predicted. Jackknife uncertainties are shown as shaded bands but are generally small enough to be visually unresolvable on the full plot.
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{figures/ebl_final/ebl_full_jackknife.png}
+    \caption{The \textsc{simba} predicted EBL integrated over $0 < z < 7$, with jackknife uncertainties shown as shaded bands. The three model components — optical/NIR (blue), far-IR dust continuum (red), and radio (green) — are shown separately alongside the compiled observational data (black points).}
+    \label{fig:finalEBL}
+\end{figure*}
+
+To isolate the contributions from distinct cosmic epochs, the EBL was computed separately in three redshift bins: $0 < z < 1$, $1 < z < 3$, and $3 < z < 7$, each constructed from an independent light cone with its own jackknife error estimate (\cref{fig:finalBinnedEBL}). The sum of the three bins recovers the full EBL of \cref{fig:finalEBL}, and the decreasing amplitude with increasing redshift bin confirms that the $z < 3$ universe accounts for the dominant share of the total EBL across all three spectral components. Contributions from $3 < z < 7$ are of order $10^{-2}\,\mathrm{nW\,m^{-2}\,sr^{-1}}$, further supporting the decision to truncate the integration at $z = 7$.
+
+Several physically motivated trends are apparent in the binned decomposition. The optical/NIR emission is dominated by the $0 < z < 1$ bin, as expected: the apparent brightness of stellar populations falls with distance, so the local universe contributes disproportionately to the integrated starlight background. The far IR component peaks in the $1 < z < 3$ bin, coinciding with the epoch of peak cosmic star formation activity. Photons travelling from these distances traverse greater dust column densities, with UV and optical radiation progressively reprocessed into the far IR, whose emission is then further redshifted to longer observed wavelengths. The radio emission is likewise most prominent at low redshift, where radio loud AGN are both abundant and subject to minimal cosmological dimming.
+
+The individual redshift bin estimates carry noticeably larger jackknife uncertainties than the full redshift prediction. This is a consequence of cosmic variance: each narrow bin subtends a smaller comoving volume, making the jackknife sub-volumes more sensitive to the stochastic distribution of bright sources. When integrated over the full redshift range, these fluctuations partially cancel across the larger ensemble of sub-volumes, reducing the relative variance in the total EBL estimate. This behaviour is consistent with the result that cosmic variance scales inversely with the square root of the survey volume \parencite{pass}.
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/ebl_final/ebl_jackknife_bins.png}
+    \caption{The \textsc{simba} predicted EBL decomposed into redshift bins $0 < z < 1$ (lightest), $1 < z < 3$, and $3 < z < 7$ (darkest), with jackknife uncertainties shown as shaded bands. The dominant contribution from $z < 3$ is evident across all three spectral components, with the $3 < z < 7$ bin contributing at the $10^{-2}\,\mathrm{nW\,m^{-2}\,sr^{-1}}$ level. The sum of the three bins recovers the total EBL.}
+    \label{fig:finalBinnedEBL}
+\end{figure*}
 
 \end{document}
 

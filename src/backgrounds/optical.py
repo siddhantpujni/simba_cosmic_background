@@ -12,7 +12,7 @@ from src.config import SimConfig
 from src.lightcone.generate import generate_lightcone
 
 LIGHTCONE_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "lightcones"
-SKIP_SNAPS = {000}
+SKIP_SNAPS = {150, 151}
 
 LSUN_ERG_S = 3.828e33  # erg/s
 
@@ -26,7 +26,7 @@ def compute_summed_sed_from_appmags(hdf5_path, mask=None):
             mags = f[f"galaxy_data/dicts/{k}"][:]
             if mask is not None:
                 mags = mags[mask]
-            fnu_jy = 3631.0 * 10 ** (-mags / 2.5) 
+            fnu_jy = 3631.0 * 10 ** (-mags / 2.5)
             filt = k.split("appmag.")[-1]
             
             try:
@@ -58,7 +58,7 @@ def compute_summed_sed_from_absmags(hdf5_path, mask=None):
             mags = f[f"galaxy_data/dicts/{k}"][:]
             if mask is not None:
                 mags = mags[mask]
-            fnu_jy = 3631.0 * 10 ** (-mags / 2.5)  # Convert to Jy at 10 pc
+            fnu_jy = 3631.0 * 10 ** (-mags / 2.5)
             filt = k.split("absmag.")[-1]
             
             try:
@@ -133,17 +133,10 @@ def build_lightcone(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0):
     return lc_path
 
 
-def lightcone_optical_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
-                                  galaxy_mask=None):
+def lightcone_optical_background(cfg, area_deg2=0.5, z_min=0.0, z_max=7.0, galaxy_mask = None):
     """
     Compute the optical/near-IR cosmic background intensity using
     Caesar's pre-computed apparent magnitudes (with and without dust).
-
-    Parameters
-    ----------
-    galaxy_mask : array-like, optional
-        Boolean mask of same length as lightcone galaxies. If provided,
-        only galaxies where mask is True are included. Used for jackknife.
 
     Returns
     -------
@@ -158,12 +151,15 @@ def lightcone_optical_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
         snap_arr = lc["snap"][:]
         gal_idx = lc["galaxy_index"][:]
 
-    # Apply galaxy mask if provided
+    # Apply galaxy mask if provided for jackknife error sampling
     if galaxy_mask is not None:
         galaxy_mask = np.asarray(galaxy_mask)
         if len(galaxy_mask) != len(gal_z):
             raise ValueError(f"galaxy_mask length ({len(galaxy_mask)}) != "
                            f"lightcone length ({len(gal_z)})")
+        gal_z = gal_z[galaxy_mask]
+        snap_arr = snap_arr[galaxy_mask]
+        gal_idx = gal_idx[galaxy_mask]
     else:
         galaxy_mask = np.ones(len(gal_z), dtype=bool)
 
@@ -172,7 +168,7 @@ def lightcone_optical_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
     # We'll accumulate flux at each filter's effective wavelength
     # First pass: figure out which filters are available
     unique_snaps = np.unique(snap_arr)
-
+    
     # Get filter list from first valid snapshot
     filter_info = {}  # filter_name -> (nu_Hz, lam_AA)
     for snap in unique_snaps:
@@ -212,26 +208,24 @@ def lightcone_optical_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
     # Cache HDF5 data per snapshot
     cache = {}
 
-    print(f"Processing {galaxy_mask.sum()} galaxies across "
+    print(f"Processing {len(gal_z)} galaxies across "
           f"{len(unique_snaps)} snapshots …")
 
     for snap in unique_snaps:
-        snap_int = int(snap)
-        if snap_int in SKIP_SNAPS:
+        snap = int(snap)
+        if snap in SKIP_SNAPS:
             continue
 
-        smask = (snap_arr == snap_int) & galaxy_mask
-        
-        hdf5 = cfg.hdf5_path(snap_int)
+        smask = snap_arr == snap
+        hdf5 = cfg.hdf5_path(snap)
         if not hdf5.exists():
-            print(f"  WARN: missing {hdf5}, skipping snap {snap_int}")
+            print(f"  WARN: missing {hdf5}, skipping snap {snap}")
             continue
 
-        if snap_int not in cache:
+        if snap not in cache:
             with h5py.File(hdf5, "r") as f:
                 mags = {}
                 mags_nodust = {}
-
                 for filt in filters_sorted:
                     key = f"galaxy_data/dicts/appmag.{filt}"
                     key_nd = f"galaxy_data/dicts/appmag_nodust.{filt}"
@@ -239,47 +233,32 @@ def lightcone_optical_background(cfg, area_deg2=1.0, z_min=0.0, z_max=3.0,
                         mags[filt] = f[key][:]
                     if key_nd in f:
                         mags_nodust[filt] = f[key_nd][:]
-            cache[snap_int] = (mags, mags_nodust)
+            cache[snap] = (mags, mags_nodust)
 
-        mags, mags_nodust = cache[snap_int]
+        mags, mags_nodust = cache[snap]
+        n_gals = len(mags[filters_sorted[0]]) if filters_sorted[0] in mags else 0
 
-        # Vectorised approach: extract all valid galaxy indices at once
-        # Filter out any NaN or invalid indices before casting to int
-        raw_idx = gal_idx[smask]
-        valid_mask = np.isfinite(raw_idx) & (raw_idx >= 0)
-        g_idx = raw_idx[valid_mask].astype(int)
+        print(f"  snap {snap}: {smask.sum()} lightcone galaxies")
 
-        if len(g_idx) == 0:
-            continue
+        for gi in gal_idx[smask]:
+            gi = int(gi)
+            if gi >= n_gals:
+                continue
 
-        for i, filt in enumerate(filters_sorted):
-            # --- WITH DUST ---
-            if filt in mags:
-                mag_arr = mags[filt]
-                # Safety check: ensure indices are within valid bounds (both >= 0 and < len)
-                valid_idx = g_idx[(g_idx >= 0) & (g_idx < len(mag_arr))]
+            for i, filt in enumerate(filters_sorted):
+                # With dust
+                if filt in mags:
+                    mag = mags[filt][gi]
+                    if np.isfinite(mag):
+                        fnu_jy = 3631.0 * 10 ** (-mag / 2.5)
+                        total_fnu[i] += fnu_jy
 
-                if len(valid_idx) > 0:
-                    m = mag_arr[valid_idx]
-
-                    valid_mags = np.isfinite(m) & (m < 90.0)
-
-                    if np.any(valid_mags):
-                        fnu_jy = 3631.0 * 10 ** (-m[valid_mags] / 2.5)
-                        total_fnu[i] += np.nansum(fnu_jy)
-
-            # --- WITHOUT DUST ---
-            if filt in mags_nodust:
-                mag_arr_nd = mags_nodust[filt]
-                valid_idx_nd = g_idx[(g_idx >= 0) & (g_idx < len(mag_arr_nd))]
-
-                if len(valid_idx_nd) > 0:
-                    m_nd = mag_arr_nd[valid_idx_nd]
-                    valid_mags_nd = np.isfinite(m_nd) & (m_nd < 90.0)
-
-                    if np.any(valid_mags_nd):
-                        fnu_jy_nd = 3631.0 * 10 ** (-m_nd[valid_mags_nd] / 2.5)
-                        total_fnu_nodust[i] += np.nansum(fnu_jy_nd)
+                # Without dust
+                if filt in mags_nodust:
+                    mag_nd = mags_nodust[filt][gi]
+                    if np.isfinite(mag_nd):
+                        fnu_jy_nd = 3631.0 * 10 ** (-mag_nd / 2.5)
+                        total_fnu_nodust[i] += fnu_jy_nd
 
     # Convert Jy to cgs: 1 Jy = 1e-23 erg/s/cm²/Hz
     total_fnu_cgs = total_fnu * 1e-23

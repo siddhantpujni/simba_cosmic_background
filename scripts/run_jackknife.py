@@ -127,6 +127,7 @@ def run_jackknife(cfg, args, n_regions_per_side=4, a_dust=-0.017341):
 
     # Storage for jackknife samples
     optical_samples = []
+    optical_samples_nodust = []
     farIR_samples = []
     radio_samples = []
 
@@ -146,7 +147,7 @@ def run_jackknife(cfg, args, n_regions_per_side=4, a_dust=-0.017341):
 
         # Optical/NIR
         print("  Computing optical/NIR background...")
-        lam, I_nu, _ = lightcone_optical_background(
+        lam, I_nu, I_nu_nodust = lightcone_optical_background(
             cfg, area_deg2=args.area, z_min=args.z_min, z_max=args.z_max,
             galaxy_mask=jackknife_mask
         )
@@ -154,13 +155,16 @@ def run_jackknife(cfg, args, n_regions_per_side=4, a_dust=-0.017341):
         valid = np.isfinite(lam) & np.isfinite(I_nu) & (lam > 0)
         lam   = lam[valid]
         I_nu  = I_nu[valid]
+        I_nu_nodust = I_nu_nodust[valid]
 
         if lam_opt is None:
             lam_opt = lam
         nu_opt = (c_light / (lam * u.AA)).to_value(u.Hz)
         nuInu = nu_opt * I_nu * 1e6  # nW m^-2 sr^-1
+        nuInu_nodust = nu_opt * I_nu_nodust * 1e6  # nW m^-2 sr^-1
 
         optical_samples.append(nuInu)
+        optical_samples_nodust.append(nuInu_nodust)
 
         # Far-IR
         print("  Computing far-IR background...")
@@ -186,6 +190,7 @@ def run_jackknife(cfg, args, n_regions_per_side=4, a_dust=-0.017341):
 
     # Convert to arrays
     optical_samples = np.array(optical_samples)
+    optical_samples_nodust = np.array(optical_samples_nodust)
     farIR_samples = np.array(farIR_samples)
     radio_samples = np.array(radio_samples)
 
@@ -193,6 +198,7 @@ def run_jackknife(cfg, args, n_regions_per_side=4, a_dust=-0.017341):
     print("\n=== Computing jackknife statistics ===")
 
     opt_mean, opt_var, opt_std = jackknife_variance(optical_samples)
+    opt_nodust_mean, opt_nodust_var, opt_nodust_std = jackknife_variance(optical_samples_nodust)
     fir_mean, fir_var, fir_std = jackknife_variance(farIR_samples)
     radio_mean, radio_var, radio_std = jackknife_variance(radio_samples)
 
@@ -207,6 +213,9 @@ def run_jackknife(cfg, args, n_regions_per_side=4, a_dust=-0.017341):
             "mean": opt_mean,
             "std": opt_std,
             "samples": optical_samples,
+            "mean_nodust": opt_nodust_mean,
+            "std_nodust": opt_nodust_std,
+            "samples_nodust": optical_samples_nodust,
         },
         "farIR": {
             "lam_um": lam_fir_um,
@@ -247,6 +256,10 @@ def save_results(cfg, args, results):
             grp.create_dataset("mean", data=results[band]["mean"])
             grp.create_dataset("std", data=results[band]["std"])
             grp.create_dataset("samples", data=results[band]["samples"])
+            if band == "optical":
+                grp.create_dataset("mean_nodust", data=results[band]["mean_nodust"])
+                grp.create_dataset("std_nodust", data=results[band]["std_nodust"])
+                grp.create_dataset("samples_nodust", data=results[band]["samples_nodust"])
 
     print(f"\nSaved results → {out_file}")
     return out_file
@@ -277,6 +290,21 @@ def print_summary(results):
             print(f"  νIν = {peak_val:.4f} ± {peak_err:.4f} nW m⁻² sr⁻¹")
             print(f"  Relative error: {rel_err:.1f}%")
 
+        if band == "optical":
+            mean_nodust = data["mean_nodust"]
+            std_nodust = data["std_nodust"]
+            valid_nodust = mean_nodust > 0
+            if valid_nodust.any():
+                peak_idx = np.argmax(mean_nodust[valid_nodust])
+                peak_lam = data["lam_um"][valid_nodust][peak_idx]
+                peak_val = mean_nodust[valid_nodust][peak_idx]
+                peak_err = std_nodust[valid_nodust][peak_idx]
+                rel_err = 100 * peak_err / peak_val if peak_val > 0 else 0
+
+                print(f"  (no dust) Peak at λ = {peak_lam:.2f} µm")
+                print(f"    νIν = {peak_val:.4f} ± {peak_err:.4f} nW m⁻² sr⁻¹")
+                print(f"    Relative error: {rel_err:.1f}%")
+
     print("\n" + "=" * 60)
 
 
@@ -295,13 +323,10 @@ def main():
     cfg = load_config(args.sim)
     print(f"Running jackknife on {cfg.name} (box={cfg.box_size_mpc_h} Mpc/h)")
 
-    # Run jackknife
     results = run_jackknife(cfg, args, n_regions_per_side=args.n_regions)
 
-    # Save results
     save_results(cfg, args, results)
 
-    # Print summary
     print_summary(results)
 
 if __name__ == "__main__":

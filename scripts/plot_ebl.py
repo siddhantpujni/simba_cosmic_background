@@ -39,8 +39,6 @@ EBL_PATH = Path("/home/spujni/simba_cosmic_background/data/results/"
 JK_PATH  = Path("/home/spujni/simba_cosmic_background/data/jackknife/"
                 "jackknife_m100n1024_a0.5_z0.0-7.0.h5")
 OBS_PATH = Path("/home/spujni/simba_cosmic_background/data/ebl/ebldata.csv")
-BIN_CACHE = Path("/home/spujni/simba_cosmic_background/data/results/"
-                 "ebl_redshift_bins_m100n1024.h5")
 FIG_DIR   = Path("figures/ebl_final")
 
 # ── Redshift bins ──────────────────────────────────────────────────────────
@@ -105,14 +103,16 @@ def load_ebl(path: Path) -> dict:
     with h5py.File(path, "r") as f:
         opt_lam  = f["optical/lam_AA"][:]  * 1e-4        # → µm
         opt_nW   = f["optical/nuInu_nW"][:]
+        opt_nodust_nW = f["optical/nuInu_nodust_nW"][:]
         fir_lam  = f["farIR/lam_AA"][:]   * 1e-4
         fir_nW   = f["farIR/nuInu_nW"][:]
         rad_lam  = f["radio/lam_um"][:]
         rad_nW   = f["radio/nuInu_nW"][:]
+
     return dict(opt_lam=opt_lam, opt_nW=opt_nW,
                 fir_lam=fir_lam, fir_nW=fir_nW,
-                rad_lam=rad_lam, rad_nW=rad_nW)
-
+                rad_lam=rad_lam, rad_nW=rad_nW,
+                opt_nodust_nW=opt_nodust_nW)
 
 def load_jackknife(path: Path) -> dict:
     """Load jackknife mean and std from HDF5."""
@@ -124,6 +124,9 @@ def load_jackknife(path: Path) -> dict:
                 "mean":   f[f"{key}/mean"][:],
                 "std":    f[f"{key}/std"][:],
             }
+            if key == "optical":
+                data[key]["mean_nodust"] = f[f"{key}/mean_nodust"][:]
+                data[key]["std_nodust"] = f[f"{key}/std_nodust"][:]
     return data
 
 
@@ -143,61 +146,6 @@ def load_observed(path: Path) -> pd.DataFrame:
         df["instrument"] = "Observed"
 
     return df
-
-
-def compute_redshift_bins(cfg, args, a_dust=-0.017341) -> dict:
-    """
-    Compute optical + far-IR + radio backgrounds for each redshift bin.
-    Returns dict keyed by bin label.
-    """
-    results = {}
-    for z_lo, z_hi, label, _ in ZBINS:
-        print(f"\n── Computing bin {label} ──")
-        # Optical
-        lam_o, I_nu_o, _ = lightcone_optical_background(
-            cfg, area_deg2=args.area, z_min=z_lo, z_max=z_hi)
-        valid_o = np.isfinite(lam_o) & (lam_o > 0)
-        lam_o, I_nu_o = lam_o[valid_o], I_nu_o[valid_o]
-        nu_o = (c_light / (lam_o * u.AA)).to_value(u.Hz)
-        nuInu_o = nu_o * I_nu_o * CGS_TO_NW
-
-        # Far-IR
-        lam_f, I_lam_f, _, _ = lightcone_farIR_background(
-            cfg, area_deg2=args.area, z_min=z_lo, z_max=z_hi,
-            a_dust=a_dust, return_dust_temps=True)
-        nuInu_f = lam_f * I_lam_f * CGS_TO_NW
-
-        # Radio
-        nu_r, I_nu_r, _, _ = lightcone_radio_background(
-            cfg, area_deg2=args.area, z_min=z_lo, z_max=z_hi)
-        nuInu_r = nu_r * I_nu_r * CGS_TO_NW
-        lam_r = (c_light / (nu_r * u.Hz)).to_value(u.AA) * 1e-4
-
-        results[label] = dict(
-            opt_lam=lam_o * 1e-4, opt_nW=nuInu_o,
-            fir_lam=lam_f,        fir_nW=nuInu_f,
-            rad_lam=lam_r,        rad_nW=nuInu_r,
-        )
-
-    # Cache to HDF5
-    BIN_CACHE.parent.mkdir(parents=True, exist_ok=True)
-    with h5py.File(BIN_CACHE, "w") as f:
-        for label, d in results.items():
-            grp = f.create_group(label.replace(" ", "_"))
-            for k, v in d.items():
-                grp.create_dataset(k, data=v)
-    print(f"\nRedshift-bin data cached → {BIN_CACHE}")
-    return results
-
-
-def load_bin_cache(path: Path) -> dict:
-    results = {}
-    with h5py.File(path, "r") as f:
-        for grp_name in f:
-            label = grp_name.replace("_", " ")
-            results[label] = {k: f[grp_name][k][:] for k in f[grp_name]}
-    return results
-
 
 # ══════════════════════════════════════════════════════════════════════════
 # Plotting helpers
@@ -283,6 +231,11 @@ def plot_full_ebl(ebl: dict, jk: dict, obs: pd.DataFrame,
                     jk["radio"]["lam_um"], jk["radio"]["mean"],
                     std=jk["radio"]["std"],
                     color="#6ABF69", label="Radio (SF + AGN)")
+    
+    # Optical (no dust)
+    _plot_component(ax, jk["optical"]["lam_um"], jk["optical"]["mean_nodust"],
+                        std=jk["optical"]["std_nodust"],
+                        color="#024588", label="Optical (no dust)")
 
     # ── Observed data ─────────────────────────────────────────────
     _obs_scatter(ax, obs)
@@ -303,7 +256,6 @@ def plot_full_ebl(ebl: dict, jk: dict, obs: pd.DataFrame,
     fig.tight_layout()
     save_dir.mkdir(parents=True, exist_ok=True)
     out = save_dir / "ebl_full_jackknife.pdf"
-    fig.savefig(out, dpi=200, bbox_inches="tight")
     fig.savefig(out.with_suffix(".png"), dpi=200, bbox_inches="tight")
     print(f"Saved → {out}")
     plt.close(fig)
@@ -319,14 +271,14 @@ def plot_redshift_binned_ebl(jk_paths, obs, save_dir):
     Each panel shows optical, far-IR, and radio with jackknife errors, plus observed data.
     """
     bin_labels = [
-        "z = 0.0–1.0",
+        "z = 0.0–1.0", 
         "z = 1.0–3.0",
         "z = 3.0–7.0"
     ]
     bin_colors = [
-        ("#4C9BE8", "#E85C4C", "#6ABF69"),  # optical, farIR, radio
-        ("#4C9BE8", "#E85C4C", "#6ABF69"),
-        ("#4C9BE8", "#E85C4C", "#6ABF69"),
+        ("#4C9BE8", "#024588", "#E85C4C", "#6ABF69"),  # optical, optical no dust, farIR, radio
+        ("#4C9BE8", "#024588", "#E85C4C", "#6ABF69"),
+        ("#4C9BE8", "#024588", "#E85C4C", "#6ABF69"),
     ]
 
     fig, axes = plt.subplots(3, 1, figsize=(9, 13), sharex=True)
@@ -340,16 +292,21 @@ def plot_redshift_binned_ebl(jk_paths, obs, save_dir):
                         jk["optical"]["lam_um"], jk["optical"]["mean"],
                         std=jk["optical"]["std"],
                         color=colors[0], label="Optical / NIR")
+        # Optical (no dust)
+        _plot_component(ax,
+                        jk["optical"]["lam_um"], jk["optical"]["mean_nodust"],
+                        std=jk["optical"]["std_nodust"],
+                        color=colors[1], label="Optical (no dust)")
         # Far-IR
         _plot_component(ax,
                         jk["farIR"]["lam_um"], jk["farIR"]["mean"],
                         std=jk["farIR"]["std"],
-                        color=colors[1], label="Far-IR (dust MBB)")
+                        color=colors[2], label="Far-IR (dust MBB)")
         # Radio
         _plot_component(ax,
                         jk["radio"]["lam_um"], jk["radio"]["mean"],
                         std=jk["radio"]["std"],
-                        color=colors[2], label="Radio (SF + AGN)")
+                        color=colors[3], label="Radio (SF + AGN)")
         # Observed
         _obs_scatter(ax, obs)
         ax.set_xscale("log")
@@ -364,7 +321,6 @@ def plot_redshift_binned_ebl(jk_paths, obs, save_dir):
     fig.tight_layout()
     save_dir.mkdir(parents=True, exist_ok=True)
     out = save_dir / "ebl_jackknife_bins.pdf"
-    fig.savefig(out, dpi=200, bbox_inches="tight")
     fig.savefig(out.with_suffix(".png"), dpi=200, bbox_inches="tight")
     print(f"Saved → {out}")
     plt.close(fig)
@@ -470,25 +426,12 @@ def main():
 
     # ── Figure 2 ──────────────────────────────────────────────────
     print("\n── Figure 2: EBL by redshift bin ──")
-    if args.compute_bins:
-        cfg = load_config(args.sim)
-        bins = compute_redshift_bins(cfg, args, a_dust=args.a_dust)
-    elif BIN_CACHE.exists():
-        print(f"Loading cached bin data from {BIN_CACHE} …")
-        bins = load_bin_cache(BIN_CACHE)
-    else:
-        print("No cached bin data found. Run with --compute_bins to generate it.")
-        return
-
     jk_bin_paths = [
         Path("data/jackknife/jackknife_m100n1024_a0.5_z0.0-1.0.h5"),
         Path("data/jackknife/jackknife_m100n1024_a0.5_z1.0-3.0.h5"),
         Path("data/jackknife/jackknife_m100n1024_a0.5_z3.0-7.0.h5"),
     ]
     plot_redshift_binned_ebl(jk_bin_paths, obs, FIG_DIR)
-
-    print("\n── Figure 3: EBL by redshift bin (Single axis) ──")
-    plot_redshift_binned_single_ax(jk_bin_paths, obs, FIG_DIR)
 
     print("\nDone.")
 

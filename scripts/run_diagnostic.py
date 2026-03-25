@@ -142,10 +142,15 @@ def main():
         temps, _ = dust_temp_results[a_val]
         if len(temps) == 0:
             continue
+        median_temp = np.nanmedian(temps)
+        std_temp = np.nanstd(temps)
         ax_hist.hist(temps, bins=60, range=(5, 80), alpha=0.55,
                      color=col, edgecolor='k', linewidth=0.3,
-                     label=f'$a_{{\\rm dust}} = {a_val:+.4f}$'
-                           f'  (med = {np.nanmedian(temps):.3f} K)')
+                    label=(
+                        rf'$a_{{\rm dust}} = {a_val:+.4f}$'
+                        f'  (med = {median_temp:.3f} K, '
+                        rf'$\sigma$ = {std_temp:.3f} K)'
+                    ))
     ax_hist.set_xlabel(r'$T_{\rm eqv}$ [K]', fontsize=12)
     ax_hist.set_ylabel('Number of galaxies', fontsize=12)
     ax_hist.legend(fontsize=9)
